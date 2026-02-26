@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-import asyncio
 import logging
 
 from dataclasses import dataclass
-from typing import Any
 
-from motor.motor_asyncio import AsyncIOMotorClient
+from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine
 
 from abstract_repository.iactivity_repository import IActivityRepository
 from abstract_repository.ievent_repository import IEventRepository
@@ -22,13 +23,13 @@ from controllers.program_controller import ProgramController
 from controllers.session_controller import SessionController
 from controllers.user_controller import UserController
 from controllers.venue_controller import VenueController
-from repository_mongodb.activity_repository import ActivityRepository as MongoActivityRepository
-from repository_mongodb.event_repository import EventRepository as MongoEventRepository
-from repository_mongodb.lodging_repository import LodgingRepository as MongoLodgingRepository
-from repository_mongodb.program_repository import ProgramRepository as MongoProgramRepository
-from repository_mongodb.session_repository import SessionRepository as MongoSessionRepository
-from repository_mongodb.user_repository import UserRepository as MongoUserRepository
-from repository_mongodb.venue_repository import VenueRepository as MongoVenueRepository
+from repository.activity_repository import ActivityRepository
+from repository.event_repository import EventRepository
+from repository.lodging_repository import LodgingRepository
+from repository.program_repository import ProgramRepository
+from repository.session_repository import SessionRepository
+from repository.user_repository import UserRepository
+from repository.venue_repository import VenueRepository
 from services.activity_service import ActivityService
 from services.event_service import EventService
 from services.lodging_service import LodgingService
@@ -42,7 +43,8 @@ from settings import settings
 
 logger = logging.getLogger(__name__)
 
-_mongo_client: AsyncIOMotorClient[Any] | None = None
+_pg_engine: AsyncEngine | None = None
+_pg_session_factory: async_sessionmaker[AsyncSession] | None = None
 
 
 @dataclass
@@ -186,47 +188,46 @@ class ServiceLocator:
 
 
 async def get_service_locator() -> ServiceLocator:
-    global _mongo_client
+    global _pg_engine, _pg_session_factory
 
-    if _mongo_client is None:
-        _mongo_client = AsyncIOMotorClient(settings.DATABASE_URL_ASYNC)
-    mongo_client: AsyncIOMotorClient[Any] = _mongo_client
+    if _pg_engine is None:
+        _pg_engine = create_async_engine(
+            settings.DATABASE_URL_ASYNC,
+            connect_args={"server_settings": {"search_path": "event_db"}},
+        )
+        _pg_session_factory = async_sessionmaker(_pg_engine, expire_on_commit=False)
 
-    m_venue_repo: IVenueRepository = MongoVenueRepository(mongo_client)
-    m_program_repo: IProgramRepository = MongoProgramRepository(
-        mongo_client, m_venue_repo
+    session: AsyncSession = _pg_session_factory()
+
+    venue_repo: IVenueRepository = VenueRepository(session)
+    program_repo: IProgramRepository = ProgramRepository(session, venue_repo)
+    lodging_repo: ILodgingRepository = LodgingRepository(session, venue_repo)
+    activity_repo: IActivityRepository = ActivityRepository(session, venue_repo)
+    user_repo: IUserRepository = UserRepository(session)
+    event_repo: IEventRepository = EventRepository(
+        session, user_repo, activity_repo, lodging_repo
     )
-    m_lodging_repo: ILodgingRepository = MongoLodgingRepository(
-        mongo_client, m_venue_repo
-    )
-    m_activity_repo: IActivityRepository = MongoActivityRepository(
-        mongo_client, m_venue_repo
-    )
-    m_user_repo: IUserRepository = MongoUserRepository(mongo_client)
-    m_event_repo: IEventRepository = MongoEventRepository(
-        mongo_client, m_user_repo, m_activity_repo, m_lodging_repo
-    )
-    m_session_repo: ISessionRepository = MongoSessionRepository(
-        mongo_client, m_program_repo, m_event_repo
+    session_repo: ISessionRepository = SessionRepository(
+        session, program_repo, event_repo
     )
 
-    lodging_serv = LodgingService(m_lodging_repo)
-    venue_serv = VenueService(m_venue_repo)
-    program_serv = ProgramService(m_program_repo)
-    activity_serv = ActivityService(m_activity_repo)
-    session_serv = SessionService(m_session_repo)
-    event_serv = EventService(m_event_repo)
-    user_serv = UserService(m_user_repo)
-    auth_serv = AuthService(m_user_repo)
+    lodging_serv = LodgingService(lodging_repo)
+    venue_serv = VenueService(venue_repo)
+    program_serv = ProgramService(program_repo)
+    activity_serv = ActivityService(activity_repo)
+    session_serv = SessionService(session_repo)
+    event_serv = EventService(event_repo)
+    user_serv = UserService(user_repo)
+    auth_serv = AuthService(user_repo)
 
     repositories = Repositories(
-        m_lodging_repo,
-        m_venue_repo,
-        m_program_repo,
-        m_activity_repo,
-        m_session_repo,
-        m_event_repo,
-        m_user_repo,
+        lodging_repo,
+        venue_repo,
+        program_repo,
+        activity_repo,
+        session_repo,
+        event_repo,
+        user_repo,
     )
 
     venue_contr = VenueController(venue_serv)

@@ -44,9 +44,9 @@ class EventController:
             ]
 
             lodgings = [
-                l
+                ldg
                 for lid in data["lodging_ids"]
-                if (l := await self.lodging_service.get_by_id(lid)) is not None
+                if (ldg := await self.lodging_service.get_by_id(lid)) is not None
             ]
             event = Event(
                 event_id=1,
@@ -92,17 +92,17 @@ class EventController:
                         ],
                         "lodgings": [
                             {
-                                "id": l.lodging_id,
-                                "price": l.price,
-                                "address": l.address,
-                                "name": l.name,
-                                "type": l.type,
-                                "rating": l.rating,
-                                "check_in": l.check_in.isoformat(),
-                                "check_out": l.check_out.isoformat(),
-                                "venue": l.venue,
+                                "id": ldg.lodging_id,
+                                "price": ldg.price,
+                                "address": ldg.address,
+                                "name": ldg.name,
+                                "type": ldg.type,
+                                "rating": ldg.rating,
+                                "check_in": ldg.check_in.isoformat(),
+                                "check_out": ldg.check_out.isoformat(),
+                                "venue": ldg.venue,
                             }
-                            for l in lodging_list
+                            for ldg in lodging_list
                         ],
                     }
                 }
@@ -144,9 +144,9 @@ class EventController:
             ]
 
             lodgings = [
-                l
+                ldg
                 for lid in data["lodging_ids"]
-                if (l := await self.lodging_service.get_by_id(lid)) is not None
+                if (ldg := await self.lodging_service.get_by_id(lid)) is not None
             ]
 
             event = Event(
@@ -232,17 +232,17 @@ class EventController:
                             ],
                             "lodgings": [
                                 {
-                                    "id": l.lodging_id,
-                                    "price": l.price,
-                                    "address": l.address,
-                                    "name": l.name,
-                                    "type": l.type,
-                                    "rating": l.rating,
-                                    "check_in": l.check_in.isoformat(),
-                                    "check_out": l.check_out.isoformat(),
-                                    "venue": l.venue,
+                                    "id": ldg.lodging_id,
+                                    "price": ldg.price,
+                                    "address": ldg.address,
+                                    "name": ldg.name,
+                                    "type": ldg.type,
+                                    "rating": ldg.rating,
+                                    "check_in": ldg.check_in.isoformat(),
+                                    "check_out": ldg.check_out.isoformat(),
+                                    "venue": ldg.venue,
                                 }
-                                for l in lodging_list
+                                for ldg in lodging_list
                             ],
                         }
                     )

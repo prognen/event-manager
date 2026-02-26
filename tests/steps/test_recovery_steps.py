@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 from pytest_bdd import scenarios, given, when, then
 import requests
 from main import app
@@ -9,7 +9,7 @@ import os
 fake = Faker("ru_RU")
 
 scenarios("../features/recovery.feature")
-BDD_PASS = os.environ.get("BDD_USER_PASS")
+BDD_PASS = os.environ.get("BDD_USER_PASS", "Test@Pass123")
 # BDD_PASS = "Test123!"
 BASE_URL = "http://localhost:8000"
 

@@ -1,4 +1,4 @@
-﻿import pytest
+import pytest
 import requests
 from pytest_bdd import scenarios, given, when, then
 from main import app
@@ -7,8 +7,7 @@ from faker import Faker
 import os
 
 fake = Faker("ru_RU")
-BDD_PASS = os.environ.get("BDD_USER_PASS")
-# BDD_PASS = "Test123!"
+BDD_PASS = os.environ.get("BDD_USER_PASS", "Test@Pass123")
 BASE_URL = "http://localhost:8000"
 
 scenarios("../features/password_rotation.feature")

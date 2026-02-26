@@ -1,4 +1,4 @@
-﻿import re
+import re
 import base64
 import pytest
 import requests
@@ -12,8 +12,7 @@ fake = Faker("ru_RU")
 
 scenarios("../features/authentication.feature")
 
-BDD_PASS = os.environ.get("BDD_USER_PASS")
-# BDD_PASS = "Test123!"
+BDD_PASS = os.environ.get("BDD_USER_PASS", "Test@Pass123")
 
 
 # ------------------------------

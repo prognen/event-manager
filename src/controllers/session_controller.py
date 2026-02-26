@@ -80,9 +80,9 @@ class SessionController:
                     if (a := await self.activity_service.get_by_id(int(aid))) is not None
                 ],
                 lodgings=[
-                    l
+                    ldg
                     for lid in data.get("lodgings[]")
-                    if (l := await self.lodging_service.get_by_id(int(lid))) is not None
+                    if (ldg := await self.lodging_service.get_by_id(int(lid))) is not None
                 ],
             )
             data["event"] = await self.event_service.add(event)
@@ -365,17 +365,17 @@ class SessionController:
                                     ],
                                     "lodgings": [
                                         {
-                                            "id": l.lodging_id,
-                                            "name": l.name,
-                                            "address": l.address,
-                                            "price": l.price,
-                                            "type": l.type,
-                                            "rating": l.rating,
-                                            "check_in": l.check_in.isoformat(),
-                                            "check_out": l.check_out.isoformat(),
-                                            "venue": l.venue,
+                                            "id": ldg.lodging_id,
+                                            "name": ldg.name,
+                                            "address": ldg.address,
+                                            "price": ldg.price,
+                                            "type": ldg.type,
+                                            "rating": ldg.rating,
+                                            "check_in": ldg.check_in.isoformat(),
+                                            "check_out": ldg.check_out.isoformat(),
+                                            "venue": ldg.venue,
                                         }
-                                        for l in (
+                                        for ldg in (
                                             await self.event_service.get_lodgings_by_event(
                                                 s.event.event_id
                                             )

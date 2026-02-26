@@ -40,9 +40,9 @@ async def get_all_lodgings(
     lodging_list = await service_locator.get_lodging_contr().get_all_lodgings()
     lodgings = lodging_list.get("lodgings", [])
     logger.info("Получено %d размещений", len(lodgings))
-    for l in lodgings:
-        l["check_in"] = datetime.fromisoformat(l["check_in"])
-        l["check_out"] = datetime.fromisoformat(l["check_out"])
+    for ldg in lodgings:
+        ldg["check_in"] = datetime.fromisoformat(ldg["check_in"])
+        ldg["check_out"] = datetime.fromisoformat(ldg["check_out"])
     logger.info("Получение списка площадок")
     venues_list = await service_locator.get_venue_contr().get_all_venues()
     venues = venues_list.get("venues", [])
@@ -130,7 +130,7 @@ async def add_lodging_to_session(
                 event.event_id
             )
         )
-        lodging_ids = [l.lodging_id for l in lodgings]
+        lodging_ids = [ldg.lodging_id for ldg in lodgings]
         lodging_ids.append(result["lodging_id"])
 
         await service_locator.get_event_serv().link_lodgings(

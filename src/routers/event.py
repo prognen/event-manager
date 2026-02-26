@@ -59,12 +59,12 @@ async def get_all_events(
     for a in activities:
         a["activity_time"] = datetime.fromisoformat(a["activity_time"])
     lodgings = event_list.get("lodgings", [])
-    for l in lodgings:
-        l["check_in"] = datetime.fromisoformat(l["check_in"])
-        l["check_out"] = datetime.fromisoformat(l["check_out"])
-    for l in all_lodgings["lodgings"]:
-        l["check_in"] = datetime.fromisoformat(l["check_in"])
-        l["check_out"] = datetime.fromisoformat(l["check_out"])
+    for ldg in lodgings:
+        ldg["check_in"] = datetime.fromisoformat(ldg["check_in"])
+        ldg["check_out"] = datetime.fromisoformat(ldg["check_out"])
+    for ldg in all_lodgings["lodgings"]:
+        ldg["check_in"] = datetime.fromisoformat(ldg["check_in"])
+        ldg["check_out"] = datetime.fromisoformat(ldg["check_out"])
 
     for event in events:
         for activity in event["activities"]:

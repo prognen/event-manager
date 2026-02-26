@@ -13,7 +13,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from abstract_repository.ievent_repository import IEventRepository
 from abstract_repository.iprogram_repository import IProgramRepository
 from abstract_repository.isession_repository import ISessionRepository
-from models.program import Program
 from models.session import Session
 
 
