@@ -362,7 +362,7 @@ class SessionRepository(ISessionRepository):
                 tv.venue_id as to_venue_id,
                 tv.name as to_venue_name,
                 p.type_transport as transport,
-                p.price as price,
+                p.cost as price,
                 s.start_time,
                 s.end_time,
                 s.type

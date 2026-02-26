@@ -32,7 +32,7 @@ class ProgramRepository(IProgramRepository):
                 programs.append(Program(
                     program_id=row["id"],
                     type_transport=row["type_transport"],
-                    cost=row["price"],
+                    cost=row["cost"],
                     distance=row["distance"],
                     from_venue=from_venue,
                     to_venue=to_venue,
@@ -55,7 +55,7 @@ class ProgramRepository(IProgramRepository):
                 return Program(
                     program_id=row["id"],
                     type_transport=row["type_transport"],
-                    cost=row["price"],
+                    cost=row["cost"],
                     distance=row["distance"],
                     from_venue=from_venue,
                     to_venue=to_venue,
@@ -68,8 +68,8 @@ class ProgramRepository(IProgramRepository):
 
     async def add(self, program: Program) -> Program:
         query = text("""
-            INSERT INTO program (type_transport, from_venue, to_venue, distance, price)
-            VALUES (:type_transport, :from_venue, :to_venue, :distance, :price)
+            INSERT INTO program (type_transport, from_venue, to_venue, distance, cost)
+            VALUES (:type_transport, :from_venue, :to_venue, :distance, :cost)
             RETURNING id
         """)
         try:
@@ -78,7 +78,7 @@ class ProgramRepository(IProgramRepository):
                 "from_venue": program.from_venue.venue_id if program.from_venue else None,
                 "to_venue": program.to_venue.venue_id if program.to_venue else None,
                 "distance": program.distance,
-                "price": program.cost,
+                "cost": program.cost,
             })
             new_id = result.scalar_one()
             await self.session.commit()
@@ -101,7 +101,7 @@ class ProgramRepository(IProgramRepository):
                 from_venue = :from_venue,
                 to_venue = :to_venue,
                 distance = :distance,
-                price = :price
+                cost = :cost
             WHERE id = :program_id
         """)
         try:
@@ -110,7 +110,7 @@ class ProgramRepository(IProgramRepository):
                 "from_venue": update_program.from_venue.venue_id if update_program.from_venue else None,
                 "to_venue": update_program.to_venue.venue_id if update_program.to_venue else None,
                 "distance": update_program.distance,
-                "price": update_program.cost,
+                "cost": update_program.cost,
                 "program_id": update_program.program_id,
             })
             if result.rowcount == 0:
@@ -156,7 +156,7 @@ class ProgramRepository(IProgramRepository):
                 return Program(
                     program_id=row["id"],
                     type_transport=type_transport,
-                    cost=row["price"],
+                    cost=row["cost"],
                     distance=row["distance"],
                     from_venue=from_venue,
                     to_venue=to_venue,
