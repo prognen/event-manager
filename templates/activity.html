@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
@@ -140,9 +140,9 @@
             <td>{{ activity.id }}</td>
             <td>{{ activity.duration }}</td>
             <td>{{ activity.address }}</td>
-            <td>{{ entertainment.activity_type }}</td>
-            <td>{{ entertainment.activity_time.strftime("%d.%m.%Y %H:%M") }}</td>
-            <td>{{ activity.venue.name }}</td>
+            <td>{{ activity.activity_type }}</td>
+            <td>{{ activity.activity_time.strftime("%d.%m.%Y %H:%M") }}</td>
+            <td>{{ activity.venue.name if activity.venue is not string else activity.venue }}</td>
             <td>
               <form method="post" action="/activity/delete/{{ activity.id }}" onsubmit="return confirm('Удалить это Активность?');">
                 <button type="submit" class="btn-flat" style="color: #888;">
@@ -154,8 +154,8 @@
                 data-id="{{ activity.id }}" 
                 data-duration="{{ activity.duration }}" 
                 data-address="{{ activity.address }}" 
-                data-activity_type="{{ entertainment.activity_type }}" 
-                data-activity_time="{{ entertainment.activity_time.strftime('%Y-%m-%dT%H:%M') }}"
+                data-activity_type="{{ activity.activity_type }}" 
+                data-activity_time="{{ activity.activity_time.strftime('%Y-%m-%dT%H:%M') }}"
                 data-city="{{ activity.venue }}">
                 <i class="material-icons">edit</i>
               </a>

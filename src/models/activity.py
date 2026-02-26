@@ -46,15 +46,18 @@ class Activity(BaseModel):
     @classmethod
     def validate_activity_type(cls, v: str) -> str:
         allowed_types = {
-            "Мастер-класс",
-            "Выступление",
+            "Конференция",
+            "Семинар",
             "Выставка",
-            "Церемония",
+            "Форум",
             "Экскурсия",
             "Нетворкинг",
+            "Мастер-класс",
+            "Выступление",
+            "Церемония",
         }
         if v not in allowed_types:
             raise ValueError(
-                f'activity_type должен быть одним из следующих: {", ".join(allowed_types)}'
+                f'activity_type должен быть одним из следующих: {", ".join(sorted(allowed_types))}'
             )
         return v
