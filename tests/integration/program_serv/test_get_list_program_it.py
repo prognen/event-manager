@@ -5,20 +5,17 @@ import pytest
 from services.program_service import ProgramService
 
 
-TMP = 12
+EXPECTED_COUNT = 12
 
 
 @pytest.mark.asyncio
 async def test_get_list_programs(
     program_service: ProgramService,
 ) -> None:
-    routes = await program_service.get_list()
+    programs = await program_service.get_list()
 
-    assert len(routes) == TMP
-    names = [r.type_transport for r in routes]
-    assert "Паром" in names
-    assert "Самолет" in names
-    assert "Автобус" in names
-
-
-
+    assert len(programs) == EXPECTED_COUNT
+    transport_types = [p.type_transport for p in programs]
+    assert "Паром" in transport_types
+    assert "Самолет" in transport_types
+    assert "Автобус" in transport_types

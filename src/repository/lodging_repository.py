@@ -27,7 +27,7 @@ class LodgingRepository(ILodgingRepository):
             result = await self.session.execute(query)
             lodgings = []
             for row in result.mappings():
-                venue = await self.venue_repo.get_by_id(row["Venue"]) if row["Venue"] else None
+                venue = await self.venue_repo.get_by_id(row["venue"]) if row["venue"] else None
                 lodgings.append(Lodging(
                     lodging_id=row["id"],
                     price=row["price"],
@@ -51,7 +51,7 @@ class LodgingRepository(ILodgingRepository):
             result = await self.session.execute(query, {"lodging_id": lodging_id})
             row = result.mappings().first()
             if row:
-                venue = await self.venue_repo.get_by_id(row["Venue"]) if row["Venue"] else None
+                venue = await self.venue_repo.get_by_id(row["venue"]) if row["venue"] else None
                 logger.debug("Найдено размещение ID %d: %s", lodging_id, row["name"])
                 return Lodging(
                     lodging_id=row["id"],

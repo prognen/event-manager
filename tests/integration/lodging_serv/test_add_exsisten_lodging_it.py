@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import re
 
@@ -24,7 +24,7 @@ async def test_add_duplicate_name_accommodation_raises(
         rating=3,
         check_in=datetime(2025, 4, 2, 14, 0, 0),
         check_out=datetime(2025, 4, 6, 18, 0, 0),
-        Venue=Venue(venue_id=1, name="Москва"),
+        venue=Venue(venue_id=1, name="Москва"),
     )
     with pytest.raises(
         ValueError, match=re.escape("Размещение c таким ID уже существует.")

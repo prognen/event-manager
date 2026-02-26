@@ -7,7 +7,7 @@ from models.program import Program
 from services.program_service import ProgramService
 
 
-FOUR = 13
+NEW_PROGRAM_ID = 13
 
 
 @pytest.mark.asyncio
@@ -25,5 +25,5 @@ async def test_add_program_success(
 
     result = await program_service.add(new_program)
 
-    assert result.program_id == FOUR
+    assert result.program_id == NEW_PROGRAM_ID
     assert result.type_transport == "Поезд"

@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import pytest
 
@@ -9,9 +9,9 @@ from services.program_service import ProgramService
 async def test_get_empty_list(program_service: ProgramService) -> None:
     for i in range(1, 13):
         await program_service.delete(i)
-    routes = await program_service.get_list()
+    programs = await program_service.get_list()
 
-    assert len(routes) == 0
+    assert len(programs) == 0
 
 
 

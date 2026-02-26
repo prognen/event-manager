@@ -68,7 +68,9 @@ class VenueRepository(IVenueRepository):
     async def update(self, update_venue: Venue) -> None:
         query = text("UPDATE Venue SET name = :name WHERE venue_id = :venue_id")
         try:
-            await self.session.execute(query, {"name": update_venue.name, "venue_id": update_venue.venue_id})
+            result = await self.session.execute(query, {"name": update_venue.name, "venue_id": update_venue.venue_id})
+            if result.rowcount == 0:
+                raise ValueError(f"Площадка с ID {update_venue.venue_id} не найдена")
             await self.session.commit()
             logger.debug("Площадка ID %d успешно обновлена", update_venue.venue_id)
         except SQLAlchemyError as e:

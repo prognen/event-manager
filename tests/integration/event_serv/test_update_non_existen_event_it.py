@@ -12,9 +12,6 @@ from models.user import User
 from services.event_service import EventService
 
 
-THIRD = 3
-
-
 @pytest.mark.asyncio
 async def test_add_event_duplicate_id(event_service: EventService) -> None:
     us = [
@@ -39,18 +36,7 @@ async def test_add_event_duplicate_id(event_service: EventService) -> None:
             rating=5,
             check_in=datetime(2025, 3, 29, 12, 30, 0),
             check_out=datetime(2025, 4, 5, 18, 0, 0),
-            Venue=Venue(venue_id=1, name="Москва"),
-        ),
-        Lodging(
-            lodging_id=2,
-            price=7340,
-            address="Улица Толстого, 134",
-            name="Мир",
-            type="Хостел",
-            rating=4,
-            check_in=datetime(2025, 4, 2, 12, 30, 0),
-            check_out=datetime(2025, 4, 5, 18, 0, 0),
-            Venue=Venue(venue_id=1, name="Москва"),
+            venue=Venue(venue_id=1, name="Москва"),
         ),
     ]
     ents = [
@@ -58,28 +44,20 @@ async def test_add_event_duplicate_id(event_service: EventService) -> None:
             activity_id=1,
             duration="4 часа",
             address="Главная площадь",
-            activity_type="Концерт",
+            activity_type="Нетворкинг",
             activity_time=datetime(2025, 4, 10, 16, 0, 0),
-            Venue=Venue(venue_id=1, name="Москва"),
-        ),
-        Activity(
-            activity_id=2,
-            duration="3 часа",
-            address="ул. Кузнецова, 4",
-            activity_type="Выставка",
-            activity_time=datetime(2025, 4, 5, 10, 0, 0),
-            Venue=Venue(venue_id=1, name="Москва"),
+            venue=Venue(venue_id=1, name="Москва"),
         ),
     ]
-    new_event = Event(
-        event_id=133,
+    non_existing_event = Event(
+        event_id=999,
         status="Активное",
         users=us,
-        accommodations=accs,
-        entertainments=ents,
+        lodgings=accs,
+        activities=ents,
     )
-    res = await event_service.update(new_event)
-    assert res is not None
 
+    with pytest.raises(ValueError):
+        await event_service.update(non_existing_event)
 
 

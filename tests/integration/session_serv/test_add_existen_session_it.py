@@ -17,7 +17,7 @@ from services.session_service import SessionService
 
 
 @pytest.mark.asyncio
-async def test_add_duplicate_session_raises(
+async def test_add_session_with_existing_program_succeeds(
     session_service: SessionService, db_session: AsyncSession
 ) -> None:
     program = Program(
@@ -50,7 +50,7 @@ async def test_add_duplicate_session_raises(
             rating=5,
             check_in=datetime(2025, 3, 29, 12, 30, 0),
             check_out=datetime(2025, 4, 5, 18, 0, 0),
-            Venue=Venue(venue_id=1, name="Москва"),
+            venue=Venue(venue_id=1, name="Москва"),
         ),
         Lodging(
             lodging_id=2,
@@ -61,7 +61,7 @@ async def test_add_duplicate_session_raises(
             rating=4,
             check_in=datetime(2025, 4, 2, 12, 30, 0),
             check_out=datetime(2025, 4, 5, 18, 0, 0),
-            Venue=Venue(venue_id=1, name="Москва"),
+            venue=Venue(venue_id=1, name="Москва"),
         ),
     ]
     ents = [
@@ -69,9 +69,9 @@ async def test_add_duplicate_session_raises(
             activity_id=1,
             duration="4 часа",
             address="Главная площадь",
-            activity_type="Концерт",
+            activity_type="Нетворкинг",
             activity_time=datetime(2025, 4, 10, 16, 0, 0),
-            Venue=Venue(venue_id=1, name="Москва"),
+            venue=Venue(venue_id=1, name="Москва"),
         ),
         Activity(
             activity_id=2,
@@ -79,15 +79,15 @@ async def test_add_duplicate_session_raises(
             address="ул. Кузнецова, 4",
             activity_type="Выставка",
             activity_time=datetime(2025, 4, 5, 10, 0, 0),
-            Venue=Venue(venue_id=1, name="Москва"),
+            venue=Venue(venue_id=1, name="Москва"),
         ),
     ]
     event = Event(
         event_id=1,
         status="Активное",
         users=user,
-        accommodations=accs,
-        entertainments=ents,
+        lodgings=accs,
+        activities=ents,
     )
     duplicate_session = Session(
         session_id=1,

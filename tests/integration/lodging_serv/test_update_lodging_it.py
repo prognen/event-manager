@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from datetime import datetime
 
@@ -22,13 +22,10 @@ async def test_update_accommodation_raises(
         rating=5,
         check_in=datetime(2025, 3, 29, 12, 30, 0),
         check_out=datetime(2025, 4, 5, 18, 0, 0),
-        Venue=Venue(venue_id=1, name="Москва"),
+        venue=Venue(venue_id=1, name="Москва"),
     )
 
-    await lodging_service.update(non_existing)
-
-    result = await lodging_service.get_by_id(999)
-    assert result is None
-
+    with pytest.raises(ValueError):
+        await lodging_service.update(non_existing)
 
 

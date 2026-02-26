@@ -9,11 +9,11 @@ from services.program_service import ProgramService
 async def test_update_program_success(
     program_service: ProgramService,
 ) -> None:
-    route = await program_service.get_by_id(2)
-    assert route is not None
+    program = await program_service.get_by_id(2)
+    assert program is not None
 
-    route.type_transport = "Поезд"
-    await program_service.update(route)
+    program.type_transport = "Поезд"
+    await program_service.update(program)
 
     updated = await program_service.get_by_id(2)
     assert updated is not None

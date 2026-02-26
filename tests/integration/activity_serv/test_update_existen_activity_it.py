@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from datetime import datetime
 
@@ -17,9 +17,9 @@ async def test_update_non_existing_entertainment_raises(
         activity_id=999,
         duration="2 часа",
         address="test",
-        activity_type="Музей",
+        activity_type="Мастер-класс",
         activity_time=datetime(2025, 1, 1, 12, 0, 0),
-        Venue=(Venue(venue_id=1, name="Москва")),
+        venue=(Venue(venue_id=1, name="Москва")),
     )
 
     await activity_service.update(non_existing)

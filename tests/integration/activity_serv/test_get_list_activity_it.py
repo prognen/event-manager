@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import pytest
 
@@ -16,8 +16,7 @@ async def test_get_all_entertainments_success(
 
     assert len(entertainments) == TWO
     names = [ent.activity_type for ent in entertainments]
-    assert "Концерт" in names
+    assert "Нетворкинг" in names
     assert "Выставка" in names
-
 
 

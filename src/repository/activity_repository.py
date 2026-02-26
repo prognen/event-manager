@@ -27,7 +27,7 @@ class ActivityRepository(IActivityRepository):
             result = await self.session.execute(query)
             activities = []
             for row in result.mappings():
-                venue = await self.venue_repo.get_by_id(row["Venue"]) if row["Venue"] else None
+                venue = await self.venue_repo.get_by_id(row["venue"]) if row["venue"] else None
                 activities.append(Activity(
                     activity_id=row["id"],
                     duration=row["duration"],
@@ -48,7 +48,7 @@ class ActivityRepository(IActivityRepository):
             result = await self.session.execute(query, {"activity_id": activity_id})
             row = result.mappings().first()
             if row:
-                venue = await self.venue_repo.get_by_id(row["Venue"]) if row["Venue"] else None
+                venue = await self.venue_repo.get_by_id(row["venue"]) if row["venue"] else None
                 logger.debug("Найдена активность ID %d", activity_id)
                 return Activity(
                     activity_id=row["id"],

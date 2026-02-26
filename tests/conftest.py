@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import asyncio
 import uuid
@@ -260,7 +260,7 @@ async def fill_test_data(session: AsyncSession) -> None:
         {
             "duration": "4 часа",
             "address": "Главная площадь",
-            "activity_type": "Концерт",
+            "activity_type": "Нетворкинг",
             "activity_time": datetime(2025, 4, 10, 16, 0, 0),
             "Venue": 1,
         },
@@ -534,6 +534,9 @@ async def fill_test_data(session: AsyncSession) -> None:
             "INSERT INTO users_event (event_id, users_id) VALUES (:event_id, :users_id)"
         ),
         {"event_id": 2, "users_id": 1},
+    )
+    await session.execute(
+        text("SELECT setval('event_id_seq', (SELECT MAX(id) FROM event))")
     )
     await session.commit()
 

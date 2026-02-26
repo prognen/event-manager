@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from datetime import datetime
 
@@ -25,7 +25,7 @@ async def test_add_accommodation_success(
         rating=5,
         check_in=datetime(2025, 3, 29, 12, 30, 0),
         check_out=datetime(2025, 4, 5, 18, 0, 0),
-        Venue=Venue(venue_id=1, name="Москва"),
+        venue=Venue(venue_id=1, name="Москва"),
     )
 
     await lodging_service.add(new_accommodation)

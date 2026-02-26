@@ -6,11 +6,10 @@ from services.session_service import SessionService
 
 
 @pytest.mark.asyncio
-async def test_get_routes_by_type_success(session_service: SessionService) -> None:
-    routes = await session_service.get_routes_by_type("Личные")
+async def test_get_sessions_by_type_success(session_service: SessionService) -> None:
+    sessions = await session_service.get_sessions_by_type("Личные")
 
-    assert len(routes) > 0
-    assert all(session.type == "Личные" for route in routes)
-
+    assert len(sessions) > 0
+    assert all(session.type == "Личные" for session in sessions)
 
 

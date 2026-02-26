@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import re
 
@@ -19,12 +19,12 @@ async def test_add_duplicate_name_entertainment_raises(
         activity_id=1,
         duration="4 часа",
         address="Главная площадь",
-        activity_type="Концерт",
+        activity_type="Нетворкинг",
         activity_time=datetime(2025, 4, 10, 16, 0, 0),
-        Venue=Venue(venue_id=1, name="Москва"),
+        venue=Venue(venue_id=1, name="Москва"),
     )
     with pytest.raises(
-        ValueError, match=re.escape("Развлечение c таким ID уже существует.")
+        ValueError, match=re.escape("Активность c таким ID уже существует.")
     ):
         await activity_service.add(existing_entertainment)
 

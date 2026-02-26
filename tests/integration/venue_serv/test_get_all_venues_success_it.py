@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import pytest
 
@@ -10,10 +10,9 @@ TMP = 5
 
 @pytest.mark.asyncio
 async def test_get_all_cities_success(venue_service: VenueService) -> None:
-    cities = await venue_service.get_all_cities()
+    cities = await venue_service.get_all_venues()
 
     assert cities is not None
     assert len(cities) == TMP
-
 
 

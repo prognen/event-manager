@@ -20,6 +20,7 @@ async def test_update_non_existing_program_raises(
         cost=50,
     )
 
-    await program_service.update(fake_program)
-    result = await program_service.get_by_id(999)
-    assert result is None
+    with pytest.raises(ValueError):
+        await program_service.update(fake_program)
+
+

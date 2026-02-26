@@ -417,3 +417,189 @@ class EventMother:
     @staticmethod
     def with_id(event_id: int) -> Event:
         return EventBuilder().with_id(event_id).build()
+
+
+# ---------------------------------------------------------------------------
+# Program (Программа перемещения между площадками)
+# ---------------------------------------------------------------------------
+
+class ProgramBuilder:
+    """Data Builder для Program."""
+
+    def __init__(self) -> None:
+        self._program_id: int = 1
+        self._type_transport: str = "Автобус"
+        self._cost: int = 2000
+        self._distance: int = 500
+        self._from_venue: Optional[Venue] = None
+        self._to_venue: Optional[Venue] = None
+
+    def with_id(self, program_id: int) -> "ProgramBuilder":
+        self._program_id = program_id
+        return self
+
+    def with_transport(self, type_transport: str) -> "ProgramBuilder":
+        self._type_transport = type_transport
+        return self
+
+    def with_cost(self, cost: int) -> "ProgramBuilder":
+        self._cost = cost
+        return self
+
+    def with_distance(self, distance: int) -> "ProgramBuilder":
+        self._distance = distance
+        return self
+
+    def with_from_venue(self, venue: Venue) -> "ProgramBuilder":
+        self._from_venue = venue
+        return self
+
+    def with_to_venue(self, venue: Venue) -> "ProgramBuilder":
+        self._to_venue = venue
+        return self
+
+    def build(self) -> Program:
+        return Program(
+            program_id=self._program_id,
+            type_transport=self._type_transport,
+            cost=self._cost,
+            distance=self._distance,
+            from_venue=self._from_venue,
+            to_venue=self._to_venue,
+        )
+
+
+class ProgramMother:
+    """Object Mother для Program."""
+
+    @staticmethod
+    def default() -> Program:
+        return (
+            ProgramBuilder()
+            .with_from_venue(VenueMother.moscow())
+            .with_to_venue(VenueMother.saint_petersburg())
+            .build()
+        )
+
+    @staticmethod
+    def by_train() -> Program:
+        return (
+            ProgramBuilder()
+            .with_id(1)
+            .with_transport("Поезд")
+            .with_cost(1911)
+            .with_distance(515)
+            .with_from_venue(VenueMother.moscow())
+            .with_to_venue(VenueMother.saint_petersburg())
+            .build()
+        )
+
+    @staticmethod
+    def by_plane() -> Program:
+        return (
+            ProgramBuilder()
+            .with_id(2)
+            .with_transport("Самолет")
+            .with_cost(2223)
+            .with_distance(467)
+            .with_from_venue(VenueMother.moscow())
+            .with_to_venue(VenueMother.saint_petersburg())
+            .build()
+        )
+
+    @staticmethod
+    def with_id(program_id: int) -> Program:
+        return ProgramBuilder().with_id(program_id).build()
+
+
+# ---------------------------------------------------------------------------
+# Session (Сессия мероприятия)
+# ---------------------------------------------------------------------------
+
+class SessionBuilder:
+    """Data Builder для Session."""
+
+    def __init__(self) -> None:
+        self._session_id: int = 1
+        self._program: Optional[Program] = None
+        self._event: Optional[Event] = None
+        self._start_time: datetime = datetime(2025, 6, 10, 9, 0, 0)
+        self._end_time: datetime = datetime(2025, 6, 10, 18, 0, 0)
+        self._type: str = "Официальные"
+
+    def with_id(self, session_id: int) -> "SessionBuilder":
+        self._session_id = session_id
+        return self
+
+    def with_program(self, program: Program) -> "SessionBuilder":
+        self._program = program
+        return self
+
+    def with_event(self, event: Event) -> "SessionBuilder":
+        self._event = event
+        return self
+
+    def with_start_time(self, start_time: datetime) -> "SessionBuilder":
+        self._start_time = start_time
+        return self
+
+    def with_end_time(self, end_time: datetime) -> "SessionBuilder":
+        self._end_time = end_time
+        return self
+
+    def with_type(self, session_type: str) -> "SessionBuilder":
+        self._type = session_type
+        return self
+
+    def build(self) -> Session:
+        return Session(
+            session_id=self._session_id,
+            program=self._program,
+            event=self._event,
+            start_time=self._start_time,
+            end_time=self._end_time,
+            type=self._type,
+        )
+
+
+class SessionMother:
+    """Object Mother для Session."""
+
+    @staticmethod
+    def default() -> Session:
+        return (
+            SessionBuilder()
+            .with_program(ProgramMother.default())
+            .with_event(EventMother.default())
+            .build()
+        )
+
+    @staticmethod
+    def official() -> Session:
+        return (
+            SessionBuilder()
+            .with_id(1)
+            .with_type("Официальные")
+            .with_program(ProgramMother.by_train())
+            .with_event(EventMother.active())
+            .with_start_time(datetime(2025, 6, 10, 9, 0, 0))
+            .with_end_time(datetime(2025, 6, 10, 18, 0, 0))
+            .build()
+        )
+
+    @staticmethod
+    def personal() -> Session:
+        return (
+            SessionBuilder()
+            .with_id(2)
+            .with_type("Личные")
+            .with_program(ProgramMother.by_plane())
+            .with_event(EventMother.active())
+            .with_start_time(datetime(2025, 6, 11, 10, 0, 0))
+            .with_end_time(datetime(2025, 6, 11, 17, 0, 0))
+            .build()
+        )
+
+    @staticmethod
+    def with_id(session_id: int) -> Session:
+        return SessionBuilder().with_id(session_id).build()
