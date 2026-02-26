@@ -10,7 +10,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import create_async_engine
 
 
-# Для типизации MongoDB
 MongoDB = Database[Any]
 
 
@@ -23,7 +22,7 @@ class PostgreSQLToMongoMigrator:
         """Основной метод для выполнения миграции данных"""
         engine = create_async_engine(
             self.pg_async_url,
-            connect_args={"server_settings": {"search_path": "travel_db"}},
+            connect_args={"server_settings": {"search_path": "event_db"}},
             echo=True,
             pool_pre_ping=True,
         )
@@ -31,53 +30,47 @@ class PostgreSQLToMongoMigrator:
             mongo_client: MongoClient[Any] = MongoClient(
                 self.mongo_uri, serverSelectionTimeoutMS=5000
             )
-            mongo_client.admin.command("ping")  # Проверка подключения
+            mongo_client.admin.command("ping")
             print("MongoDB подключена успешно!")
         except ConnectionFailure as e:
             print(f"Ошибка подключения к MongoDB: {e}")
-        db: MongoDB = mongo_client["travel_db"]
+        db: MongoDB = mongo_client["event_db"]
 
-        # Очистка MongoDB
         for collection in db.list_collection_names():
             db.drop_collection(collection)
 
-        # Миграция данных
         async with AsyncSession(engine) as session:
-            await self._migrate_cities(session, db)
+            await self._migrate_venues(session, db)
             await self._migrate_users(session, db)
-            await self._migrate_directory_routes(session, db)
-            await self._migrate_entertainments(session, db)
-            await self._migrate_accommodations(session, db)
-            await self._migrate_travels(session, db)
-            await self._migrate_routes(session, db)
+            await self._migrate_programs(session, db)
+            await self._migrate_activities(session, db)
+            await self._migrate_lodgings(session, db)
+            await self._migrate_events(session, db)
+            await self._migrate_sessions(session, db)
 
-        # Создание индексов
         self._create_indexes(db)
 
         await engine.dispose()
         mongo_client.close()
         print("Миграция успешно завершена")
 
-    async def _migrate_cities(self, session: AsyncSession, db: MongoDB) -> None:
-        """Миграция данных о городах"""
-        result = await session.execute(
-            text("SELECT city_id, name FROM city")
-        )  # Note: added id here
+    async def _migrate_venues(self, session: AsyncSession, db: MongoDB) -> None:
+        """Миграция данных о площадках"""
+        result = await session.execute(text("SELECT venue_id, name FROM venue"))
         rows = result.fetchall()
-        cities = [{"_id": row[0], "name": row[1]} for row in rows]
-
-        if cities:
-            db.cities.insert_many(cities)
-            print(f"Inserted {len(cities)} cities")
+        venues = [{"_id": row[0], "name": row[1]} for row in rows]
+        if venues:
+            db.venues.insert_many(venues)
+            print(f"Inserted {len(venues)} venues")
         else:
-            print("No cities found in the database")
+            print("No venues found in the database")
 
     async def _migrate_users(self, session: AsyncSession, db: MongoDB) -> None:
         """Миграция данных пользователей"""
         result = await session.execute(
             text(
                 """
-            SELECT id, full_name, passport, phone, email, login, password, is_admin 
+            SELECT id, full_name, passport, phone, email, login, password, is_admin
             FROM users
         """
             )
@@ -98,67 +91,65 @@ class PostgreSQLToMongoMigrator:
         if users:
             db.users.insert_many(users)
 
-    async def _migrate_directory_routes(
-        self, session: AsyncSession, db: MongoDB
-    ) -> None:
-        """Миграция справочника маршрутов"""
+    async def _migrate_programs(self, session: AsyncSession, db: MongoDB) -> None:
+        """Миграция программ маршрутов"""
         result = await session.execute(
             text(
                 """
-            SELECT id, type_transport, departure_city, arrival_city, distance, price
-            FROM directory_route
+            SELECT id, type_transport, from_venue, to_venue, distance, cost
+            FROM program
         """
             )
         )
-        routes: list[dict[str, Any]] = [
+        programs: list[dict[str, Any]] = [
             {
                 "_id": row[0],
                 "type_transport": row[1],
-                "departure_city_id": row[2],
-                "arrival_city_id": row[3],
+                "from_venue_id": row[2],
+                "to_venue_id": row[3],
                 "distance": row[4],
-                "price": row[5],
+                "cost": row[5],
             }
             for row in result.fetchall()
         ]
-        if routes:
-            db.directory_routes.insert_many(routes)
+        if programs:
+            db.programs.insert_many(programs)
 
-    async def _migrate_entertainments(self, session: AsyncSession, db: MongoDB) -> None:
-        """Миграция данных о развлечениях"""
+    async def _migrate_activities(self, session: AsyncSession, db: MongoDB) -> None:
+        """Миграция данных об активностях"""
         result = await session.execute(
             text(
                 """
-            SELECT id, duration, address, event_name, event_time, city
-            FROM entertainment
+            SELECT id, duration, address, activity_type, activity_time, venue
+            FROM activity
         """
             )
         )
-        entertainments: list[dict[str, Any]] = [
+        activities: list[dict[str, Any]] = [
             {
                 "_id": row[0],
                 "duration": row[1],
                 "address": row[2],
-                "event_name": row[3],
-                "event_time": row[4],
-                "city_id": row[5],
+                "activity_type": row[3],
+                "activity_time": row[4],
+                "venue_id": row[5],
             }
             for row in result.fetchall()
         ]
-        if entertainments:
-            db.entertainments.insert_many(entertainments)
+        if activities:
+            db.activities.insert_many(activities)
 
-    async def _migrate_accommodations(self, session: AsyncSession, db: MongoDB) -> None:
+    async def _migrate_lodgings(self, session: AsyncSession, db: MongoDB) -> None:
         """Миграция данных о размещении"""
         result = await session.execute(
             text(
                 """
-            SELECT id, price, address, name, type, rating, check_in, check_out, city
-            FROM accommodations
+            SELECT id, price, address, name, type, rating, check_in, check_out, venue
+            FROM lodgings
         """
             )
         )
-        accommodations: list[dict[str, Any]] = [
+        lodgings: list[dict[str, Any]] = [
             {
                 "_id": row[0],
                 "price": row[1],
@@ -168,137 +159,133 @@ class PostgreSQLToMongoMigrator:
                 "rating": row[5],
                 "check_in": row[6],
                 "check_out": row[7],
-                "city_id": row[8],
+                "venue_id": row[8],
             }
             for row in result.fetchall()
         ]
-        if accommodations:
-            db.accommodations.insert_many(accommodations)
+        if lodgings:
+            db.lodgings.insert_many(lodgings)
 
-    async def _migrate_travels(self, session: AsyncSession, db: MongoDB) -> None:
-        """Миграция данных о путешествиях"""
-        result = await session.execute(text("SELECT id, status FROM travel"))
-        travels_raw = result.fetchall()
+    async def _migrate_events(self, session: AsyncSession, db: MongoDB) -> None:
+        """Миграция данных о мероприятиях"""
+        result = await session.execute(text("SELECT id, status FROM event"))
+        events_raw = result.fetchall()
+
         result = await session.execute(
-            text("SELECT travel_id, users_id FROM users_travel")
+            text("SELECT event_id, users_id FROM users_event")
         )
         users_map: dict[int, list[int]] = {}
-        for travel_id, user_id in result.fetchall():
-            users_map.setdefault(travel_id, []).append(user_id)
+        for event_id, user_id in result.fetchall():
+            users_map.setdefault(event_id, []).append(user_id)
 
-        # Получаем связанные accommodations
         result = await session.execute(
-            text("SELECT travel_id, accommodation_id FROM travel_accommodations")
+            text("SELECT event_id, lodging_id FROM event_lodgings")
         )
-        accommodations_map: dict[int, list[int]] = {}
-        for travel_id, accommodation_id in result.fetchall():
-            accommodations_map.setdefault(travel_id, []).append(accommodation_id)
+        lodgings_map: dict[int, list[int]] = {}
+        for event_id, lodging_id in result.fetchall():
+            lodgings_map.setdefault(event_id, []).append(lodging_id)
 
-        # Получаем связанные entertainments
         result = await session.execute(
-            text("SELECT travel_id, entertainment_id FROM travel_entertainment")
+            text("SELECT event_id, activity_id FROM event_activity")
         )
-        entertainments_map: dict[int, list[int]] = {}
-        for travel_id, entertainment_id in result.fetchall():
-            entertainments_map.setdefault(travel_id, []).append(entertainment_id)
+        activities_map: dict[int, list[int]] = {}
+        for event_id, activity_id in result.fetchall():
+            activities_map.setdefault(event_id, []).append(activity_id)
 
-        # Финальная сборка документов для MongoDB
-        travels: list[dict[str, Any]] = []
-        for row in travels_raw:
-            travel_id = row[0]
-            travel_doc = {
-                "_id": travel_id,
+        events: list[dict[str, Any]] = []
+        for row in events_raw:
+            event_id = row[0]
+            event_doc = {
+                "_id": event_id,
                 "status": row[1],
-                "users": users_map.get(travel_id, []),
-                "accommodations": accommodations_map.get(travel_id, []),
-                "entertainments": entertainments_map.get(travel_id, []),
+                "users": users_map.get(event_id, []),
+                "lodgings": lodgings_map.get(event_id, []),
+                "activities": activities_map.get(event_id, []),
             }
-            travels.append(travel_doc)
-        if travels:
-            db.travels.insert_many(travels)
+            events.append(event_doc)
+        if events:
+            db.events.insert_many(events)
 
-    async def _migrate_routes(self, session: AsyncSession, db: MongoDB) -> None:
-        routes = []
-        travel_result = await session.execute(text("SELECT id, status FROM travel"))
-        travels_raw = travel_result.fetchall()
+    async def _migrate_sessions(self, session: AsyncSession, db: MongoDB) -> None:
+        """Миграция данных о сессиях"""
+        result = await session.execute(text("SELECT id, status FROM event"))
+        events_raw = result.fetchall()
 
-        # users_travel
         result = await session.execute(
-            text("SELECT travel_id, users_id FROM users_travel")
+            text("SELECT event_id, users_id FROM users_event")
         )
         users_map: dict[int, list[int]] = {}
-        for travel_id, user_id in result.fetchall():
-            users_map.setdefault(travel_id, []).append(user_id)
+        for event_id, user_id in result.fetchall():
+            users_map.setdefault(event_id, []).append(user_id)
 
-        # travel_accommodations
         result = await session.execute(
-            text("SELECT travel_id, accommodation_id FROM travel_accommodations")
+            text("SELECT event_id, lodging_id FROM event_lodgings")
         )
-        accommodations_map: dict[int, list[int]] = {}
-        for travel_id, accommodation_id in result.fetchall():
-            accommodations_map.setdefault(travel_id, []).append(accommodation_id)
+        lodgings_map: dict[int, list[int]] = {}
+        for event_id, lodging_id in result.fetchall():
+            lodgings_map.setdefault(event_id, []).append(lodging_id)
 
-        # travel_entertainment
         result = await session.execute(
-            text("SELECT travel_id, entertainment_id FROM travel_entertainment")
+            text("SELECT event_id, activity_id FROM event_activity")
         )
-        entertainments_map: dict[int, list[int]] = {}
-        for travel_id, entertainment_id in result.fetchall():
-            entertainments_map.setdefault(travel_id, []).append(entertainment_id)
+        activities_map: dict[int, list[int]] = {}
+        for event_id, activity_id in result.fetchall():
+            activities_map.setdefault(event_id, []).append(activity_id)
 
-        # Словарь travel_id -> full travel doc
-        travel_docs: dict[int, dict[str, Any]] = {
+        # Словарь event_id -> full event doc
+        event_docs: dict[int, dict[str, Any]] = {
             row[0]: {
                 "_id": row[0],
                 "status": row[1],
                 "users": users_map.get(row[0], []),
-                "accommodations": accommodations_map.get(row[0], []),
-                "entertainments": entertainments_map.get(row[0], []),
+                "lodgings": lodgings_map.get(row[0], []),
+                "activities": activities_map.get(row[0], []),
             }
-            for row in travels_raw
+            for row in events_raw
         }
 
-        route_result = await session.execute(text("SELECT * FROM travel_db.route"))
-        for row in route_result.fetchall():
-            d_route_result = await session.execute(
-                text("SELECT * FROM travel_db.directory_route WHERE id = :id"),
-                {"id": row[1]},  # row[1] = d_route_id
+        session_result = await session.execute(
+            text("SELECT * FROM event_db.session")
+        )
+        sessions = []
+        for row in session_result.fetchall():
+            program_result = await session.execute(
+                text("SELECT * FROM event_db.program WHERE id = :id"),
+                {"id": row[1]},
             )
-            d_route_data = d_route_result.fetchone()
-            travel_id = row[2]
-            travel_data = travel_docs.get(travel_id)
+            program_data = program_result.fetchone()
+            event_id = row[2]
+            event_data = event_docs.get(event_id)
 
-            routes.append(
+            sessions.append(
                 {
                     "_id": row[0],
-                    "d_route": {
-                        "_id": d_route_data[0],
-                        "type_transport": d_route_data[1],
-                        "departure_city_id": d_route_data[2],
-                        "arrival_city_id": d_route_data[3],
-                        "distance": d_route_data[4],
-                        "price": d_route_data[5],
+                    "program": {
+                        "_id": program_data[0],
+                        "type_transport": program_data[1],
+                        "from_venue_id": program_data[2],
+                        "to_venue_id": program_data[3],
+                        "distance": program_data[4],
+                        "cost": program_data[5],
                     },
-                    "travel": travel_data,
+                    "event": event_data,
                     "start_time": row[3],
                     "end_time": row[4],
                     "type": row[5],
                 }
             )
 
-        if routes:
-            db.routes.insert_many(routes)
+        if sessions:
+            db.sessions.insert_many(sessions)
 
     def _create_indexes(self, db: MongoDB) -> None:
         """Создание индексов в MongoDB"""
-        db.cities.create_index("name", unique=True)
+        db.venues.create_index("name", unique=True)
         db.users.create_index("email", unique=True)
         db.users.create_index("login", unique=True)
         db.users.create_index("passport", unique=True)
         db.users.create_index("phone", unique=True)
-        db.directory_routes.create_index(
-            [("departure_city_id", 1), ("arrival_city_id", 1)]
-        )
+        db.programs.create_index([("from_venue_id", 1), ("to_venue_id", 1)])
 
 
 async def async_init_mongodb() -> None:

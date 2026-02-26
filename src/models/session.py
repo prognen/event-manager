@@ -15,7 +15,7 @@ from models.event import Event
 class Session(BaseModel):
     session_id: int
     program: Program | None = Field(
-        default=None, description="Программа маршрута"
+        default=None, description="Программа сессии"
     )
     event: Event | None = Field(default=None, description="Мероприятие")
     start_time: datetime

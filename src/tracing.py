@@ -13,7 +13,7 @@ def setup_tracing(app: FastAPI) -> None:
     if os.getenv("ENABLE_TRACING", "0") != "1":
         return
 
-    provider = TracerProvider(resource=Resource.create({"service.name": "travel_app"}))
+    provider = TracerProvider(resource=Resource.create({"service.name": "event_app"}))
 
     exporter = OTLPSpanExporter(endpoint="http://otel-collector:4317", insecure=True)
 

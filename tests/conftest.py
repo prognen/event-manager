@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import asyncio
 import uuid
@@ -318,7 +318,7 @@ async def fill_test_data(session: AsyncSession) -> None:
             data,
         )
 
-    d_routes = [
+    programs = [
         {
             "type_transport": "Паром",
             "from_venue": 3,
@@ -404,7 +404,7 @@ async def fill_test_data(session: AsyncSession) -> None:
             "price": 3500,
         },
     ]
-    for data in d_routes:
+    for data in programs:
         await session.execute(
             text(
                 "INSERT INTO program (type_transport, from_venue, \
@@ -450,14 +450,14 @@ async def fill_test_data(session: AsyncSession) -> None:
             user_data,
         )
 
-    travels_data = [
+    events_data = [
         {"status": "Активное", "user_id": 1},
         {"status": "Завершено", "user_id": 1},
     ]
     tr_ent = [(1, 2), (2, 1)]
     tr_a = [(1, 1), (2, 2)]
 
-    for i, travel_data in enumerate(travels_data, 1):
+    for i, event_data in enumerate(events_data, 1):
         await session.execute(
             text(
                 """
@@ -466,8 +466,8 @@ async def fill_test_data(session: AsyncSession) -> None:
             ),
             {
                 "id": i,
-                "status": travel_data["status"],
-                "user_id": travel_data["user_id"],
+                "status": event_data["status"],
+                "user_id": event_data["user_id"],
             },
         )
     for t in tr_ent:

@@ -8,25 +8,25 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.lodging import Lodging
 from models.venue import Venue
-from models.program import DirectoryRoute
+from models.program import Program
 from models.activity import Activity
-from models.session import Route
+from models.session import Session
 from models.event import Event
 from models.user import User
 from services.session_service import SessionService
 
 
 @pytest.mark.asyncio
-async def test_update_route_success(
+async def test_add_session_success(
     session_service: SessionService, db_session: AsyncSession
 ) -> None:
-    d_route = DirectoryRoute(
+    program = Program(
         program_id=1,
         type_transport="Паром",
         cost=3987,
         distance=966,
         from_venue=Venue(venue_id=3, name="Санкт-Петербург"),
-        destination_city=Venue(venue_id=5, name="Калининград"),
+        to_venue=Venue(venue_id=5, name="Калининград"),
     )
     user = User(
         user_id=1,
@@ -80,23 +80,20 @@ async def test_update_route_success(
             Venue=Venue(venue_id=1, name="Москва"),
         ),
     ]
-    travels = Event(
+    event = Event(
         event_id=1,
         status="Активное",
         users=[user],
         accommodations=accs,
         entertainments=ents,
     )
-    duplicate_route = Route(
-        route_id=4,
-        d_route=d_route,
-        travels=travels,
+    new_session = Session(
+        session_id=4,
+        program=program,
+        event=event,
         start_time=datetime(2025, 5, 1, 10, 0, 0),
         end_time=datetime(2025, 5, 5, 18, 0, 0),
         type="Личные",
     )
-    res = await session_service.add(duplicate_route)
+    res = await session_service.add(new_session)
     assert res is not None
-
-
-

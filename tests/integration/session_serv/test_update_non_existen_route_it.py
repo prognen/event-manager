@@ -6,23 +6,23 @@ import pytest
 
 from models.lodging import Lodging
 from models.venue import Venue
-from models.program import DirectoryRoute
+from models.program import Program
 from models.activity import Activity
-from models.session import Route
+from models.session import Session
 from models.event import Event
 from models.user import User
 from services.session_service import SessionService
 
 
 @pytest.mark.asyncio
-async def test_update_non_existing_route_raises(session_service: SessionService) -> None:
-    d_route = DirectoryRoute(
+async def test_update_non_existing_session_raises(session_service: SessionService) -> None:
+    program = Program(
         program_id=1,
         type_transport="Паром",
         cost=3987,
         distance=966,
         from_venue=Venue(venue_id=3, name="Санкт-Петербург"),
-        destination_city=Venue(venue_id=5, name="Калининград"),
+        to_venue=Venue(venue_id=5, name="Калининград"),
     )
     user = User(
         user_id=1,
@@ -76,24 +76,21 @@ async def test_update_non_existing_route_raises(session_service: SessionService)
             Venue=Venue(venue_id=1, name="Москва"),
         ),
     ]
-    travels = Event(
+    event = Event(
         event_id=1,
         status="Активное",
         users=[user],
         accommodations=accs,
         entertainments=ents,
     )
-    non_existing_route = Route(
-        route_id=999,
-        d_route=d_route,
-        travels=travels,
+    non_existing_session = Session(
+        session_id=999,
+        program=program,
+        event=event,
         start_time=datetime(2025, 5, 1, 10, 0, 0),
         end_time=datetime(2025, 5, 5, 18, 0, 0),
         type="Личные",
     )
-    await session_service.update(non_existing_route)
+    await session_service.update(non_existing_session)
     result = await session_service.get_by_id(999)
     assert result is None
-
-
-

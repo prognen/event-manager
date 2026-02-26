@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import pytest
 
@@ -9,7 +9,7 @@ TMP = 12
 
 
 @pytest.mark.asyncio
-async def test_get_list_directory_routes(
+async def test_get_list_programs(
     program_service: ProgramService,
 ) -> None:
     routes = await program_service.get_list()

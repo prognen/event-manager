@@ -13,7 +13,7 @@ from services.event_service import EventService
 
 
 @pytest.mark.asyncio
-async def test_add_travel_duplicate_id(event_service: EventService) -> None:
+async def test_add_event_duplicate_id(event_service: EventService) -> None:
     us = [
         User(
             user_id=1,
@@ -68,7 +68,7 @@ async def test_add_travel_duplicate_id(event_service: EventService) -> None:
             Venue=Venue(venue_id=1, name="Москва"),
         ),
     ]
-    new_travel = Event(
+    new_event = Event(
         event_id=1,
         status="Активное",
         users=us,
@@ -76,7 +76,7 @@ async def test_add_travel_duplicate_id(event_service: EventService) -> None:
         entertainments=ents,
     )
 
-    res = await event_service.add(new_travel)
+    res = await event_service.add(new_event)
     assert res is not None
 
 

@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import pytest
 
@@ -6,7 +6,7 @@ from services.program_service import ProgramService
 
 
 @pytest.mark.asyncio
-async def test_delete_directory_route_success(
+async def test_delete_program_success(
     program_service: ProgramService,
 ) -> None:
     await program_service.delete(3)

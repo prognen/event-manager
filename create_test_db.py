@@ -6,36 +6,36 @@ from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
 from sqlalchemy import MetaData
 from sqlalchemy import String
+from sqlalchemy import Boolean
 from sqlalchemy import Table
 from sqlalchemy import create_engine
 from sqlalchemy.sql import text
 
 
-# Создание движка для подключения к базе данных
 engine = create_engine("postgresql://egor@localhost:5432/postgres")
 with engine.begin() as connection:
-    connection.execute(text("CREATE SCHEMA IF NOT EXISTS travel_db"))
+    connection.execute(text("CREATE SCHEMA IF NOT EXISTS event_db"))
 
-metadata = MetaData(schema="test")
+metadata = MetaData(schema="event_db")
 
-city = Table(
-    "city",
+venue = Table(
+    "venue",
     metadata,
-    Column("city_id", Integer, primary_key=True),
+    Column("venue_id", Integer, primary_key=True),
     Column("name", String(100), unique=True, nullable=False),
-    schema="test",
+    schema="event_db",
 )
 
-directory_route = Table(
-    "directory_route",
+program = Table(
+    "program",
     metadata,
     Column("id", Integer, primary_key=True),
     Column("type_transport", String(100), nullable=False),
-    Column("departure_city", Integer, ForeignKey("test.city.city_id"), nullable=False),
-    Column("arrival_city", Integer, ForeignKey("test.city.city_id"), nullable=False),
+    Column("from_venue", Integer, ForeignKey("event_db.venue.venue_id"), nullable=False),
+    Column("to_venue", Integer, ForeignKey("event_db.venue.venue_id"), nullable=False),
     Column("distance", Integer, nullable=False),
-    Column("price", Integer, nullable=False),
-    schema="test",
+    Column("cost", Integer, nullable=False),
+    schema="event_db",
 )
 
 users = Table(
@@ -46,25 +46,26 @@ users = Table(
     Column("passport", String(20), unique=True, nullable=False),
     Column("phone", String(20), unique=True, nullable=False),
     Column("email", String(100), unique=True, nullable=False),
-    Column("username", String(50), unique=True, nullable=False),
+    Column("login", String(50), unique=True, nullable=False),
     Column("password", String(255), nullable=False),
-    schema="test",
+    Column("is_admin", Boolean, nullable=False, default=False),
+    schema="event_db",
 )
 
-accommodations = Table(
-    "entertainment",
+activity = Table(
+    "activity",
     metadata,
     Column("id", Integer, primary_key=True),
     Column("duration", String(50), nullable=False),
     Column("address", String(255), nullable=False),
-    Column("event_name", String(255), nullable=False),
-    Column("event_time", TIMESTAMP, nullable=False),
-    schema="test",
+    Column("activity_type", String(255), nullable=False),
+    Column("activity_time", TIMESTAMP, nullable=False),
+    Column("venue", Integer, ForeignKey("event_db.venue.venue_id"), nullable=False),
+    schema="event_db",
 )
 
-
-entertainment = Table(
-    "accommodations",
+lodgings = Table(
+    "lodgings",
     metadata,
     Column("id", Integer, primary_key=True),
     Column("price", Integer, nullable=False),
@@ -74,52 +75,53 @@ entertainment = Table(
     Column("rating", Integer, nullable=False),
     Column("check_in", TIMESTAMP, nullable=False),
     Column("check_out", TIMESTAMP, nullable=False),
-    schema="test",
+    Column("venue", Integer, ForeignKey("event_db.venue.venue_id"), nullable=False),
+    schema="event_db",
 )
 
-travel = Table(
-    "travel",
+event = Table(
+    "event",
     metadata,
     Column("id", Integer, primary_key=True),
     Column("status", String(50), nullable=False),
-    Column("user_id", Integer, ForeignKey("test.users.id"), nullable=False),
-    schema="test",
+    schema="event_db",
 )
 
-route = Table(
-    "route",
+session = Table(
+    "session",
     metadata,
     Column("id", Integer, primary_key=True),
-    Column(
-        "d_route_id", Integer, ForeignKey("test.directory_route.id"), nullable=False
-    ),
-    Column("travel_id", Integer, ForeignKey("test.travel.id"), nullable=False),
+    Column("program_id", Integer, ForeignKey("event_db.program.id"), nullable=False),
+    Column("event_id", Integer, ForeignKey("event_db.event.id"), nullable=False),
     Column("start_time", TIMESTAMP, nullable=False),
     Column("end_time", TIMESTAMP, nullable=False),
-    schema="test",
+    Column("type", String(20), nullable=False),
+    schema="event_db",
 )
 
-travel_entertainment = Table(
-    "travel_entertainment",
+event_activity = Table(
+    "event_activity",
     metadata,
     Column("id", Integer, primary_key=True),
-    Column("travel_id", Integer, ForeignKey("test.travel.id"), nullable=False),
-    Column(
-        "entertainment_id", Integer, ForeignKey("test.entertainment.id"), nullable=False
-    ),
-    schema="test",
+    Column("event_id", Integer, ForeignKey("event_db.event.id"), nullable=False),
+    Column("activity_id", Integer, ForeignKey("event_db.activity.id"), nullable=False),
+    schema="event_db",
 )
 
-travel_accommodations = Table(
-    "travel_accommodations",
+event_lodgings = Table(
+    "event_lodgings",
     metadata,
     Column("id", Integer, primary_key=True),
-    Column("travel_id", Integer, ForeignKey("test.travel.id"), nullable=False),
-    Column(
-        "accommodation_id",
-        Integer,
-        ForeignKey("test.accommodations.id"),
-        nullable=False,
-    ),
-    schema="test",
+    Column("event_id", Integer, ForeignKey("event_db.event.id"), nullable=False),
+    Column("lodging_id", Integer, ForeignKey("event_db.lodgings.id"), nullable=False),
+    schema="event_db",
+)
+
+users_event = Table(
+    "users_event",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("event_id", Integer, ForeignKey("event_db.event.id"), nullable=False),
+    Column("users_id", Integer, ForeignKey("event_db.users.id"), nullable=False),
+    schema="event_db",
 )

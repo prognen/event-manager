@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 class UserRepository(IUserRepository):
     def __init__(self, client: AsyncIOMotorClient[Any]):
-        self.db: AsyncIOMotorDatabase[Any] = client["travel_db"]
+        self.db: AsyncIOMotorDatabase[Any] = client["event_db"]
         self.client = client
         self.users = self.db["users"]
         logger.debug("Инициализация UserRepository для MongoDB")
@@ -171,7 +171,7 @@ class UserRepository(IUserRepository):
                 await self.client.start_session() as session,
                 session.start_transaction(),
             ):
-                await self.db["travels"].delete_many(
+                await self.db["events"].delete_many(
                     {"users": user_id}, session=session
                 )
 

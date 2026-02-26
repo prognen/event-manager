@@ -153,15 +153,15 @@
                 <td>{{ session.id }}</td>
 
                 <td>
-                    {% if route.d_route %}
+                    {% if session.program %}
                     <a href="#dRouteModal" 
-                        class="modal-trigger droute-link"
+                        class="modal-trigger programData-link"
                         data-id="{{ route.d_session.id }}"
                         data-type-transport="{{ route.d_session.type_transport }}"
-                        data-cost="{{ route.program.cost }}"
-                        data-distance="{{ route.program.distance }}"
-                        data-departure-city="{{ route.program.departure_city }}"
-                        data-destination-city="{{ route.program.destination_city }}">
+                        data-cost="{{ session.program.cost }}"
+                        data-distance="{{ session.program.distance }}"
+                        data-departure-city="{{ session.program.from_venue }}"
+                        data-destination-city="{{ session.program.to_venue }}">
                         Сессия #{{ route.d_session.id }}
                     </a>
                     {% else %}
@@ -169,15 +169,15 @@
                     {% endif %}
                 </td>
                 <td>
-                    {% if route.travel %}
-                        <a href="#travelModal" 
-                            class="modal-trigger travel-link"
-                            data-id="{{ route.event.id }}"
-                            data-status="{{ route.event.status }}"
-                            data-users="{{ route.event.users | map(attribute='fio') | join(', ') }}"
-                            data-entertainments='{{ route.event.entertainments | tojson }}'
-                            data-accommodations='{{ route.event.accommodations | tojson }}'>
-                            Мероприятие #{{ route.event.id }}
+                    {% if session.event %}
+                        <a href="#eventModal" 
+                            class="modal-trigger event-link"
+                            data-id="{{ session.event.id }}"
+                            data-status="{{ session.event.status }}"
+                            data-users="{{ session.event.users | map(attribute='fio') | join(', ') }}"
+                            data-entertainments='{{ session.event.entertainments | tojson }}'
+                            data-accommodations='{{ session.event.accommodations | tojson }}'>
+                            Мероприятие #{{ session.event.id }}
                         </a>
                     {% else %}
                         Не указано
@@ -197,8 +197,8 @@
                 <a href="#editModal" class="btn-flat edit-trigger modal-trigger"
                     style="color: #888;"
                     data-id="{{ session.id }}"
-                    data-d_route='{{ route.d_route | tojson }}'
-                    data-travel='{{ route.event.id }}'
+                    data-program='{{ session.program | tojson }}'
+                    data-event='{{ session.event.id }}'
                     data-start="{{ route.start_time }}"
                     data-end="{{ route.end_time }}"
                     data-type="{{ session.type }}">
@@ -229,13 +229,13 @@
             <option value="" disabled selected>Выберите Сессия</option>
               {% for program in programs %}
                   <option value="{{ program.d_session_id }}">
-                      Сессия #{{ program.d_session_id }}: {{ program.departure_city.name }} → {{ program.destination_city.name }} ({{ d_session.type_transport }})
+                      Сессия #{{ program.d_session_id }}: {{ program.from_venue.name }} → {{ program.to_venue.name }} ({{ d_session.type_transport }})
                   </option>
               {% endfor %}
           </select>
           <label for="d_session_id">Сессия</label>
         </div>
-        <!-- Выбор существующего travel -->
+        <!-- Выбор существующего мероприятия -->
         <div class="input-field">
           <select id="event_id" name="event_id" required>
             <option value="" disabled selected>Выберите Мероприятие</option>
@@ -287,7 +287,7 @@
           <option value="" disabled selected>Выберите Сессия</option>
             {% for program in programs %}
                 <option value="{{ program.d_session_id }}">
-                    Сессия #{{ program.d_session_id }}: {{ program.departure_city.name }} → {{ program.destination_city.name }} ({{ d_session.type_transport }})
+                    Сессия #{{ program.d_session_id }}: {{ program.from_venue.name }} → {{ program.to_venue.name }} ({{ d_session.type_transport }})
                 </option>
             {% endfor %}
         </select>
@@ -295,7 +295,7 @@
       </div>
 
       <div class="input-field">
-        <select id="editTravelId" name="editTravelId" required>
+        <select id="editEventId" name="editEventId" required>
           <option value="" disabled selected>Выберите Мероприятие</option>
           {% for event in events %}
             <option value="{{ event.event_id }}"
@@ -337,16 +337,16 @@
   </div>
 </div>
 
-<!-- Модальное окно для DRoute -->
+<!-- Модальное окно для programData -->
 <div id="dRouteModal" class="modal">
     <div class="modal-content">
       <h4>Информация о Сессияе</h4>
-      <p><strong>ID Сессияа:</strong> <span id="droute-id"></span></p>
-      <p><strong>Тип транспорта:</strong> <span id="droute-type-transport"></span></p>
-      <p><strong>Стоимость:</strong> <span id="droute-cost"></span></p>
-      <p><strong>Расстояние:</strong> <span id="droute-distance"></span></p>
-      <p><strong>Город отправления:</strong> <span id="droute-departure-city"></span></p>
-      <p><strong>Город назначения:</strong> <span id="droute-destination-city"></span></p>
+      <p><strong>ID Сессияа:</strong> <span id="programData-id"></span></p>
+      <p><strong>Тип транспорта:</strong> <span id="programData-type-transport"></span></p>
+      <p><strong>Стоимость:</strong> <span id="programData-cost"></span></p>
+      <p><strong>Расстояние:</strong> <span id="programData-distance"></span></p>
+      <p><strong>Город отправления:</strong> <span id="programData-from-venue"></span></p>
+      <p><strong>Город назначения:</strong> <span id="programData-to-venue"></span></p>
     </div>
     <div class="modal-footer">
       <button class="modal-close waves-effect waves-green btn-flat">Закрыть</button>
@@ -387,19 +387,19 @@
     </div>
 </div>
   
-<!-- Модальное окно для Travel -->
-<div id="travelModal" class="modal">
+<!-- Модальное окно для мероприятия -->
+<div id="eventModal" class="modal">
     <div class="modal-content">
-        <h4>Информация о путешествии</h4>
-        <p><strong>ID:</strong> <span id="travel-id"></span></p>
-        <p><strong>Статус:</strong> <span id="travel-status"></span></p>
-        <p><strong>Пользователь:</strong> <span id="travel-user"></span></p>
+        <h4>Информация о мероприятии</h4>
+        <p><strong>ID:</strong> <span id="event-id"></span></p>
+        <p><strong>Статус:</strong> <span id="event-status"></span></p>
+        <p><strong>Пользователь:</strong> <span id="event-user"></span></p>
         
         <h5>Активности:</h5>
-        <div id="travel-entertainments" class="collection"></div>
+        <div id="event-activities" class="collection"></div>
         
         <h5>Размещения:</h5>
-        <div id="travel-accommodations" class="collection"></div>
+        <div id="event-lodgings" class="collection"></div>
     </div>
     
     <div class="modal-footer">
@@ -493,19 +493,19 @@
     $('.edit-trigger').on('click', function() {
       currentRouteId = $(this).data('id');
 
-      const dRoute = $(this).data('d_route');
-      const travel = $(this).data('travel');
+      const program = $(this).data('program');
+      const event = $(this).data('event');
       const startTime = $(this).data('start');
       const endTime = $(this).data('end');
       const Type = $(this).data('type')
       console.log('ID Сессияа:', currentRouteId);
-      console.log('Объект d_route:', dRoute);
-      console.log('ID Мероприятия:', travel);
+      console.log('Объект program:', programData);
+      console.log('ID Мероприятия:', eventId);
       console.log('Время начала:', startTime);
       console.log('Время конца:', endTime);
 
       $('#editDRouteId').val(dsession.id);
-      $('#editTravelId').val(travel);
+      $('#editEventId').val(eventId);
       $('#edit_start_time').val(formatDateTimeForInput(startTime));
       $('#edit_end_time').val(formatDateTimeForInput(endTime));
       $('#edit_type').val(Type);
@@ -514,7 +514,7 @@
       $('#editModal').modal('open');
     });
 
-    $('.droute-link').on('click', function () {
+    $('.programData-link').on('click', function () {
         const id = $(this).data('id');
         const typeTransport = $(this).data('type-transport');
         const cost = $(this).data('cost');
@@ -522,17 +522,17 @@
         const departureCity = $(this).data('departure-city');
         const destinationCity = $(this).data('destination-city');
 
-        $('#droute-id').text(id);
-        $('#droute-type-transport').text(typeTransport);
-        $('#droute-cost').text(cost);
-        $('#droute-distance').text(distance);
-        $('#droute-departure-city').text(departureCity);
-        $('#droute-destination-city').text(destinationCity);
+        $('#programData-id').text(id);
+        $('#programData-type-transport').text(typeTransport);
+        $('#programData-cost').text(cost);
+        $('#programData-distance').text(distance);
+        $('#programData-from-venue').text(departureCity);
+        $('#programData-to-venue').text(destinationCity);
 
         $('#dRouteModal').modal('open');
     });
-        // Открытие модалки для Travel
-    $('.travel-link').on('click', function() {
+        // Открытие модалки для мероприятия
+    $('.event-link').on('click', function() {
         const id = $(this).data('id');
         const status = $(this).data('status');
         const user = $(this).data('users');
@@ -548,12 +548,12 @@
           });
         });
         // Заполняем основную информацию
-        $('#travel-id').text(id);
-        $('#travel-status').text(status);
-        $('#travel-user').text(user);
+        $('#event-id').text(id);
+        $('#event-status').text(status);
+        $('#event-user').text(user);
         
         // Формируем информацию о Активностих
-        const entContainer = $('#travel-entertainments');
+        const entContainer = $('#event-activities');
         entContainer.empty();
         
         if (entertainments.length > 0) {
@@ -574,7 +574,7 @@
         }
         
         // Формируем информацию о размещениях
-        const accContainer = $('#travel-accommodations');
+        const accContainer = $('#event-lodgings');
         accContainer.empty();
         
         if (accommodations.length > 0) {
@@ -597,13 +597,13 @@
             accContainer.append('<p>Нет размещений</p>');
         }
 
-        $('#travelModal').modal('open');
+        $('#eventModal').modal('open');
     });
 
     $('#saveEdit').on('click', function () {
       const data = {
         d_session_id: parseInt($('#editDRouteId').val()),
-        event_id: parseInt($('#editTravelId').val()),
+        event_id: parseInt($('#editEventId').val()),
         start_time: $('#edit_start_time').val(),
         end_time: $('#edit_end_time').val(),
         type: $('edit-type').val()

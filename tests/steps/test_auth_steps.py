@@ -21,15 +21,16 @@ BDD_PASS = os.environ.get("BDD_USER_PASS", "Test@Pass123")
 # ------------------------------
 @pytest.fixture
 def test_user_2fa():
-    login = f"techuser_2fa_{uuid.uuid4().hex[:8]}"
+    uid = uuid.uuid4().hex[:8]
+    login = f"techuser_2fa_{uid}"
     password = BDD_PASS
-    email = fake.email()
+    email = f"testuser_{uid}@test.com"
     phone = "89261930112"
 
     # Создаём payload для регистрации
     user_payload = {
         "fio": fake.name(),
-        "number_passport": str(fake.ssn()),
+        "number_passport": uid + uid[:2],
         "phone_number": phone,
         "email": email,
         "login": login,

@@ -131,7 +131,7 @@ async def test_get_all_events_empty() -> None:
 
 
 @pytest.mark.asyncio
-async def test_add_travel_success() -> None:
+async def test_add_event_success() -> None:
     test_event = create_test_event()
 
     with patch.object(EventService, "__init__", return_value=None):
@@ -147,7 +147,7 @@ async def test_add_travel_success() -> None:
 
 
 @pytest.mark.asyncio
-async def test_add_travel_duplicate_id() -> None:
+async def test_add_event_duplicate_id() -> None:
     mock_repo = create_mock_repository()
     test_event = create_test_event()
     with patch.object(EventService, "__init__", return_value=None):
@@ -164,7 +164,7 @@ async def test_add_travel_duplicate_id() -> None:
 
 
 @pytest.mark.asyncio
-async def test_update_travel_success() -> None:
+async def test_update_event_success() -> None:
     test_event = create_test_event()
     mock_repo = create_mock_repository()
     with patch.object(EventService, "__init__", return_value=None):
@@ -179,7 +179,7 @@ async def test_update_travel_success() -> None:
 
 
 @pytest.mark.asyncio
-async def test_update_travel_not_found() -> None:
+async def test_update_event_not_found() -> None:
     test_event = create_test_event(999)
     mock_repo = create_mock_repository()
     with patch.object(EventService, "__init__", return_value=None):
@@ -194,7 +194,7 @@ async def test_update_travel_not_found() -> None:
 
 
 @pytest.mark.asyncio
-async def test_delete_travel_success() -> None:
+async def test_delete_event_success() -> None:
     mock_repo = create_mock_repository()
     with patch.object(EventService, "__init__", return_value=None):
         service = EventService(mock_repo)
@@ -207,7 +207,7 @@ async def test_delete_travel_success() -> None:
 
 
 @pytest.mark.asyncio
-async def test_delete_travel_not_found() -> None:
+async def test_delete_event_not_found() -> None:
     mock_repo = create_mock_repository()
     with patch.object(EventService, "__init__", return_value=None):
         service = EventService(mock_repo)
@@ -221,7 +221,7 @@ async def test_delete_travel_not_found() -> None:
 
 
 @pytest.mark.asyncio
-async def test_search_travels_success() -> None:
+async def test_search_events_success() -> None:
     test_events = [create_test_event(1), create_test_event(2)]
     search_params = {"status": "Активное"}
     mock_repo = create_mock_repository()
@@ -238,7 +238,7 @@ async def test_search_travels_success() -> None:
 
 
 @pytest.mark.asyncio
-async def test_search_travels_not_found() -> None:
+async def test_search_events_not_found() -> None:
     search_params = {"status": "Несуществующий статус"}
     mock_repo = create_mock_repository()
     with patch.object(EventService, "__init__", return_value=None):
@@ -256,7 +256,7 @@ async def test_search_travels_not_found() -> None:
 
 
 @pytest.mark.asyncio
-async def test_complete_travel_success() -> None:
+async def test_complete_event_success() -> None:
     mock_repo = create_mock_repository()
     with patch.object(EventService, "__init__", return_value=None):
         service = EventService(mock_repo)
@@ -269,7 +269,7 @@ async def test_complete_travel_success() -> None:
 
 
 @pytest.mark.asyncio
-async def test_complete_travel_error() -> None:
+async def test_complete_event_error() -> None:
     mock_repo = create_mock_repository()
     with patch.object(EventService, "__init__", return_value=None):
         service = EventService(mock_repo)

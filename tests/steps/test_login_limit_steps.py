@@ -17,15 +17,16 @@ BASE_URL = "http://localhost:8000"
 
 @pytest.fixture
 def test_user():
-    login = f"techuser_limit_{uuid.uuid4().hex[:8]}"
+    uid = uuid.uuid4().hex[:8]
+    login = f"techuser_limit_{uid}"
     password = BDD_PASS
-    email = fake.email()
+    email = f"testuser_{uid}@test.com"
     phone = "80261940112"
 
     user = User(
         user_id=1,
         fio=fake.name(),
-        number_passport=str(fake.ssn()),
+        number_passport=uid + uid[:2],
         phone_number=phone,
         email=email,
         login=login,

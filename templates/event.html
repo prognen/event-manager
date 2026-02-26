@@ -163,9 +163,9 @@
       
             <!-- Размещения -->
             <td>
-              {% if travel.lodgings %}
+              {% if event.lodgings %}
                 <ul>
-                  {% for acc in travel.lodgings %}
+                  {% for acc in event.lodgings %}
                     <li>
                       <a href="#lodgingModal" 
                         class="modal-trigger lodging-link"
@@ -189,9 +189,9 @@
             </td>
             <!-- Размещения -->
             <td>
-              {% if travel.activities %}
+              {% if event.activities %}
                 <ul>
-                  {% for ent in travel.activities %}
+                  {% for ent in event.activities %}
                     <li>
                       <a href="#activityModal"
                         class="modal-trigger activity-link"
@@ -221,8 +221,8 @@
                 data-id="{{ event.id }}"
                 data-status="{{ event.status }}"
                 data-user-id="{{ event.user_id if event.user_id else '' }}"
-                data-activities='{{ travel.activities | tojson }}'
-                data-lodgings='{{ travel.lodgings | tojson }}'>
+                data-activities='{{ event.activities | tojson }}'
+                data-lodgings='{{ event.lodgings | tojson }}'>
                 <i class="material-icons">edit</i>
               </a>
             </td>
@@ -259,13 +259,13 @@
   
         <!-- Выбор пользователя (ID пользователя) -->
         <div class="input-field">
-          <select id="travel_user_id" name="user_id" required>
+          <select id="event_user_id" name="user_id" required>
             <option value="" disabled selected>Выберите пользователя</option>
             {% for user in users %}
               <option value="{{ user.user_id }}">{{ user.name }} (user_name: {{ user.fio }})</option>
             {% endfor %}
           </select>
-          <label for="travel_user_id">Пользователь</label>
+          <label for="event_user_id">Пользователь</label>
         </div>
 
         <!-- Активности (мультивыбор) -->
@@ -434,7 +434,7 @@
     $('#addEventForm').submit(function (event) {
       event.preventDefault(); // Останавливаем стандартное поведение формы
       const status = $('#status').val();
-      const user_id = $('#travel_user_id').val();
+      const user_id = $('#event_user_id').val();
       const activity_ids = $('#event_activities').val() || [];
       const lodging_ids = $('#event_lodgings').val() || [];
 
@@ -547,7 +547,7 @@
 
       // Отправляем данные для обновления
       $.ajax({
-        url: `/api/travels/${currentActivityId}`,
+        url: `/api/events/${currentActivityId}`,
         type: 'PUT',  // Метод запроса для обновления
         contentType: 'application/json',
         data: JSON.stringify(updateData),

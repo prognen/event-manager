@@ -1198,7 +1198,7 @@ $('#remove-venue-form').on('submit', function(e) {
   e.preventDefault();
   
   const cityId = $('#venue-to-remove').val();
-  const travelId = $('input[name="event_id"]').val();
+  const eventId = $('input[name="event_id"]').val();
   const keepSegments = $('input[name="keep_segments"]').is(':checked');
   
   if (!cityId) {
@@ -1217,7 +1217,7 @@ $('#remove-venue-form').on('submit', function(e) {
     contentType: 'application/json',
     data: JSON.stringify({
       venue_id: cityId,
-      event_id: travelId,
+      event_id: eventId,
       keep_segments: keepSegments
     }),
     success: function(response) {

@@ -19,15 +19,16 @@ scenarios("../features/password_rotation.feature")
 # ------------------------------
 @pytest.fixture
 def password_user():
-    login = f"techuser_oldpass_{uuid.uuid4().hex[:8]}"
+    uid = uuid.uuid4().hex[:8]
+    login = f"techuser_oldpass_{uid}"
     old_password = BDD_PASS
-    email = fake.email()
+    email = f"testuser_{uid}@test.com"
     phone = "89259930123"
 
     user = User(
         user_id=1,
         fio=fake.name(),
-        number_passport=str(fake.ssn()),
+        number_passport=uid + uid[:2],
         phone_number=phone,
         email=email,
         login=login,

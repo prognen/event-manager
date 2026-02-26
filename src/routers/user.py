@@ -151,7 +151,7 @@ async def get_user_profile(
             "request": request,
             "user": profile_data,
             "active_routes": active_events,
-            "completed_routes": completed_events,
+            "completed_events": completed_events,
             "current_user_id": profile_data["user"]["user_id"],
         },
     )

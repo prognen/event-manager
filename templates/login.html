@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TravelGuide - Вход</title>
+  <title>EventManager - Вход</title>
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
 
@@ -72,7 +72,7 @@
   <header>
     <nav class="indigo">
       <div class="nav-wrapper">
-        <a href="/" class="brand-logo left">TravelGuide</a>
+        <a href="/" class="brand-logo left">EventManager</a>
         <ul class="right">
           <li>
             <a class="dropdown-trigger" href="#!" data-target="user_dropdown">
@@ -162,7 +162,7 @@
         localStorage.setItem('auth_token', data.access_token);
         localStorage.setItem('user_id', data.user_id);
         if (data.is_admin) {
-          window.location.href = '/route.html';
+          window.location.href = '/session.html';
         } else {
           window.location.href = '/profile';
         }

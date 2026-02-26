@@ -14,10 +14,10 @@ class Program(BaseModel):
     cost: int
     distance: int
     from_venue: Venue | None = Field(
-        default=None, description="Площадка, откуда начинается маршрут"
+        default=None, description="Площадка отправления"
     )
     to_venue: Venue | None = Field(
-        default=None, description="Площадка, куда направляется маршрут"
+        default=None, description="Площадка назначения"
     )
     model_config = ConfigDict(populate_by_name=True)
 

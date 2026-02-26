@@ -168,11 +168,11 @@ class UserRepository(IUserRepository):
             )
 
     async def delete(self, user_id: int) -> None:
-        delete_travels = text("DELETE FROM users_travel WHERE users_id = :user_id")
+        delete_events = text("DELETE FROM users_event WHERE users_id = :user_id")
         delete_user = text("DELETE FROM users WHERE id = :user_id")
 
         try:
-            await self.session.execute(delete_travels, {"user_id": user_id})
+            await self.session.execute(delete_events, {"user_id": user_id})
             await self.session.execute(delete_user, {"user_id": user_id})
             await self.session.commit()
             logger.debug(f"Пользователь с ID {user_id} удалён")

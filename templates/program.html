@@ -142,7 +142,7 @@
             <td>{{ program.from_venue.name }}</td>
             <td>{{ program.destination_venue.name }}</td>
             <td>
-              <form method="post" action="/directory_route/delete/{{ program.id }}" onsubmit="return confirm('Удалить этот Программа?');">
+              <form method="post" action="/api/programs/delete/{{ program.id }}" onsubmit="return confirm('Удалить этот Программа?');">
                 <button type="submit" class="btn-flat" style="color: #888;">
                   <i class="material-icons">delete</i>
                 </button>
@@ -154,7 +154,7 @@
                 data-cost="{{ program.cost }}"
                 data-distance="{{ program.distance }}"
                 data-from_venue="{{ program.from_venue }}"
-                data-destination_city="{{ program.destination_city }}">
+                data-to_venue="{{ program.to_venue }}">
                 <i class="material-icons">edit</i>
             </a>
             </td>
@@ -206,7 +206,7 @@
           <label>Город отправления</label>
         </div>
         <div class="input-field">
-            <select id="destination_city" name="destination_city" required>
+            <select id="to_venue" name="to_venue" required>
                 <option value="" disabled selected>Выберите город назначения</option>
                 {% for venue in venues %}
                   <option value="{{ venue.id }}">{{ venue.name }} </option>
@@ -307,7 +307,7 @@
         const cost = $('#cost').val();
         const distance = $('#distance').val();
         const from_venue = $('#from_venue').val();
-        const destination_city = $('#destination_city').val();
+        const to_venue = $('#to_venue').val();
 
         // Создание объекта данных
         const formData = {
@@ -315,15 +315,15 @@
           cost: cost,
           distance: distance,
           from_venue: parseInt(from_venue),
-          destination_city: parseInt(destination_city)
+          to_venue: parseInt(to_venue)
         };
-        if (!formData.type_transport || !formData.cost || !formData.distance || !formData.from_venue || !formData.destination_city) {
+        if (!formData.type_transport || !formData.cost || !formData.distance || !formData.from_venue || !formData.to_venue) {
           alert("Пожалуйста, выберите город назначения.");
           return;
         }
         
         $.ajax({
-          url: '/api/directory_routes', 
+          url: '/api/programs', 
           type: 'POST',
           contentType: 'application/json',
           data: JSON.stringify(formData),
@@ -351,7 +351,7 @@
           };
           
           const fromCityId = parseCityData(routeData.from_venue);
-          const destinationCityId = parseCityData(routeData.destination_city);
+          const destinationCityId = parseCityData(routeData.to_venue);
           
           // Устанавливаем значения для городов
           $('#editfromCity').val(fromCityId);
@@ -368,23 +368,23 @@
         const cost = $('#editCost').val();
         const distance = $('#editDistance').val();
         const from_venue = $('#editfromCity').val();
-        const destination_city = $('#editDestinationCity').val();
+        const to_venue = $('#editDestinationCity').val();
 
         const formData = {
           type_transport: type_transport,
           cost: cost,
           distance: distance,
           from_venue: parseInt(from_venue),
-          destination_city: parseInt(destination_city)
+          to_venue: parseInt(to_venue)
         };
 
-        if (!formData.type_transport || !formData.cost || !formData.distance || !formData.from_venue || !formData.destination_city) {
+        if (!formData.type_transport || !formData.cost || !formData.distance || !formData.from_venue || !formData.to_venue) {
           alert("Пожалуйста, заполните все поля.");
           return;
         }
 
         $.ajax({
-          url: `/api/directory_routes/${currentDRouteId}`, 
+          url: `/api/programs/${currentDRouteId}`, 
           type: 'PUT',
           contentType: 'application/json',
           data: JSON.stringify(formData),

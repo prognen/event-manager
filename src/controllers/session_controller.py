@@ -60,7 +60,7 @@ class SessionController:
             if not program:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Маршрут между площадками {data['from_venue']} и {data['to_venue']} не найден",
+                    detail=f"Программа между площадками {data['from_venue']} и {data['to_venue']} не найдена",
                 )
 
             data["program"] = program
