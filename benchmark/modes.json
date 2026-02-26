@@ -1,0 +1,27 @@
+[
+    {
+      "name": "no_tracing_default_logs",
+      "ENABLE_TRACING": "0",
+      "LOG_LEVEL": "info",
+      "profiles": ["test"]
+    },
+    {
+      "name": "tracing_default_logs",
+      "ENABLE_TRACING": "1",
+      "LOG_LEVEL": "info",
+      "profiles": ["test", "tracing"]
+    },
+    {
+      "name": "no_tracing_debug_logs",
+      "ENABLE_TRACING": "0",
+      "LOG_LEVEL": "debug",
+      "profiles": ["test"]
+    },
+    {
+      "name": "tracing_debug_logs",
+      "ENABLE_TRACING": "1",
+      "LOG_LEVEL": "debug",
+      "profiles": ["test", "tracing"]
+    }
+  ]
+  

@@ -1,0 +1,278 @@
+services:
+  app:
+    build: .
+    container_name: test_debug-app-1
+    image: event_manager
+    ports:
+      - "8000:8000"
+    environment:
+      ENABLE_TRACING: "1"
+      LOG_LEVEL: "info"
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_USER: egor
+      DB_PASSWORD: egor
+      DB_NAME: mydb
+      DATABASE_URL: "postgresql://egor:egor@db:5432/mydb"
+      OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
+      # MONGO_URI: "mongodb://admin:password@mongodb:27017"
+    # volumes:
+    #   - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      # mongodb: 
+      #   condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    networks:
+      - my_network
+      - monitoring
+      
+  test-db:
+    image: postgres:15
+    container_name: test-db
+    environment:
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+      POSTGRES_DB: test_db
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+      - ./db-init:/docker-entrypoint-initdb.d/
+    ports:
+      - "5435:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test_user -d test_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - my_network
+  
+  unit-tests:
+    build: .
+    container_name: unit_tests_runner
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://test_user:test_password@test-db:5432/test_db"
+      TEST_ENV: "unit"
+    volumes:
+      - ./allure-results:/app/allure-results
+      - ./test-reports:/app/test-reports
+    depends_on:
+      test-db:
+        condition: service_healthy
+    networks:
+      - my_network
+    command: ["pytest", "tests/unit/", "-v", "--alluredir=/app/allure-results/unit"]
+    profiles: ["test"]
+
+  integration-tests:
+    build: .
+    container_name: integration_tests_runner
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://test_user:test_password@test-db:5432/test_db"
+      TEST_ENV: "integration"
+    volumes:
+      - ./allure-results:/app/allure-results
+      - ./test-reports:/app/test-reports
+    depends_on:
+      test-db:
+        condition: service_healthy
+      # unit-tests:
+        # condition: service_completed_successfully
+    networks:
+      - my_network
+    command: >
+      sh -c "
+        poetry run pytest tests/integration/ -v --alluredir=/app/allure-results/integration"
+    profiles: ["test"]
+
+  e2e-tests:
+    build: .
+    container_name: e2e_tests_runner
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://egor:egor@db:5432/mydb"
+      TEST_ENV: "e2e"
+      BASE_URL: "http://app:8000"
+    volumes:
+      - ./allure-results:/app/allure-results
+      - ./test-reports:/app/test-reports
+      - ./captures:/app/captures
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - my_network
+      - monitoring
+    command: >
+      sh -c "
+        poetry run pytest tests/e2e/ -v --alluredir=/app/allure-results/e2e"
+    profiles: ["test"]
+
+  allure:
+    image: frankescobar/allure-docker-service
+    ports:
+      - "5051:5050"
+    volumes:
+      - ./allure-results:/app/allure-results
+    networks:
+      - my_network
+
+  db:
+    image: postgres:15
+    container_name: postgres_container_test_debug
+    environment:
+      POSTGRES_USER: egor
+      POSTGRES_PASSWORD: egor
+      POSTGRES_DB: mydb
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db-init:/docker-entrypoint-initdb.d/
+    ports:
+      - "5438:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U egor -d mydb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - my_network
+
+  # mongodb:
+  #   image: mongo:latest
+  #   container_name: mongodb_test
+  #   ports:
+  #     - "27018:27017"
+  #   volumes:
+  #     - mongodb_data:/data/db
+  #   environment:
+  #     MONGO_INITDB_ROOT_USERNAME: admin
+  #     MONGO_INITDB_ROOT_PASSWORD: password
+  #   healthcheck:
+  #     test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping').ok", "-u", "admin", "-p", "password", "--quiet"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 3
+  #     start_period: 10s
+  #   networks:
+  #     - my_network
+  #   restart: unless-stopped 
+
+  tcpdump:
+    image: instrumentisto/tcpdump:latest  # Multi-arch образ
+    container_name: network_capture
+    command: [
+      "-i", "any",
+      "-w", "/captures/docker_traffic.pcap",
+      "host", "app", "or", "host", "e2e-tests-runner"
+    ]
+    volumes:
+      - ./captures:/captures
+    networks:
+      - my_network
+    privileged: true
+    profiles: ["capture"]
+
+  # mailhog:
+  #   image: mailhog/mailhog:latest
+  #   container_name: mailhog
+  #   ports:
+  #     - "1025:1025"
+  #     - "8025:8025"
+  #   networks:
+  #     - my_network
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8025/api/v2/messages"]
+  #     interval: 5s
+  #     timeout: 3s
+  #     retries: 5
+  #   restart: unless-stopped
+  
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: otel_collector
+    command: ["--config=/etc/otel-config.yaml"]
+    volumes:
+      - ./otel-config.yaml:/etc/otel-config.yaml
+    ports:
+      - "4317:4317"  # OTLP gRPC
+      - "4318:4318"  # OTLP HTTP
+    networks:
+      - my_network
+      - monitoring
+    depends_on:
+      jaeger:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:13133/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger
+    ports:
+      - "16686:16686"   # Web UI
+      - "14250:14250"   # Model.proto
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:16686"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    networks:
+      - monitoring
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - monitoring
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    ports:
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+      - /:/rootfs:ro
+    networks:
+      - monitoring
+
+
+  # grafana:
+  #   image: grafana/grafana
+  #   ports:
+  #     - "3000:3000"
+  #   networks:
+  #     - monitoring
+
+
+volumes:
+  postgres_data:
+  postgres_test_data:
+  mongodb_data:
+  allure-results:
+
+networks:
+  my_network:
+    driver: bridge
+    external: true
+  monitoring:
+    driver: bridge
+    external: true
+
+    

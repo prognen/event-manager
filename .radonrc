@@ -1,0 +1,11 @@
+[general]
+exclude = tests,venv,templates,img,allure_results
+ignore = venv
+
+[cc]
+max_cc = 10
+show_complexity = True
+average = True
+
+[halstead]
+show = True

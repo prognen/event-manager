@@ -1,0 +1,140 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EventManager - Главная</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+
+  <style>
+    /* Основной контент */
+    main {
+      margin-top: 90px; /* Отступ сверху, чтобы избежать перекрытия шапкой */
+    }
+
+    header {
+      position: fixed;
+      width: 100%;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+
+    /* Скрываем боковую панель */
+    .sidenav {
+      display: none;
+    }
+
+    /* Увеличиваем высоту слайдера */
+    .slider {
+      height: 90vh;
+    }
+
+    /* Для изображений внутри слайдера */
+    .slider img {
+      object-fit: contain;  /* Показывает всю картинку полностью */
+      width: 100%;
+      height: 100%;
+      background: #eee;     /* Можно добавить фон, если картинка не занимает всю область */
+    }
+
+    .brand-logo {
+      font-size: 24px; 
+      font-weight: bold; 
+      color: white;
+      margin-left: 20px;
+      font-family: 'Arial', sans-serif;
+    }
+
+    h1 {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    /* Оформление подписи */
+    .slider .caption {
+      position: absolute;
+      bottom: 20px; /* Сдвигаем подпись в нижнюю часть слайдера */
+      left: 0;
+      right: 0;
+      text-align: center;
+      color: white;
+    }
+
+  </style>
+</head>
+
+<body>
+  <!-- Навигация -->
+  <header>
+    <nav class="indigo">
+      <div class="nav-wrapper">
+        <a href="#" class="brand-logo left">EventManager</a>
+        <ul class="right">
+          <li>
+            <a class="dropdown-trigger" href="#!" data-target="user_dropdown">
+              <i class="material-icons">account_circle</i>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Выпадающее меню -->
+  <ul id="user_dropdown" class="dropdown-content">
+    <li><a href="/login">Войти</a></li>
+    <li><a href="/register">Регистрация</a></li>
+  </ul>
+
+  <!-- Основной контент -->
+  <main>
+    <div class="container">
+      <h1>Добро пожаловать в EventManager!</h1>
+
+      <!-- Слайдер изображений -->
+      <div class="slider">
+        <ul class="slides">
+          <li>
+            <img src="https://99px.ru/sstorage/53/2021/10/tmb_335102_952055.jpg">
+          </li>
+          <li>
+            <img src="https://s4.stc.all.kpcdn.net/russia/wp-content/uploads/2022/01/Kak-nedorogo-sletat-na-Sahalin-15.jpg">
+          </li>
+          <li>
+            <img src="https://moya-planeta.ru/upload/tmp/ec91305255550e3ec0bcde824866b9df_shutterstock_1868380363.jpg">
+          </li>
+          <li>
+            <img src="https://zastavki.gas-kvas.com/uploads/posts/2024-09/zastavki-gas-kvas-com-o8yi-p-zastavki-kazan-9.jpg">
+          </li>
+          <li>
+            <img src="https://traveller-eu.ru/sites/default/files/city-3739505_1280.jpg">
+          </li>
+        </ul>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Инициализация слайдера
+      var elems = document.querySelectorAll('.slider');
+      M.Slider.init(elems, {
+        indicators: true,
+        height: 600,
+        transition: 500,
+        interval: 6000
+      });
+      var dropdowns = document.querySelectorAll('.dropdown-trigger');
+      M.Dropdown.init(dropdowns, {
+        coverTrigger: false,
+        constrainWidth: false
+      });
+    });
+  </script>
+</body>
+</html>
+

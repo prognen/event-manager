@@ -1,0 +1,26 @@
+repos:
+  - repo: https://github.com/psf/black
+    rev: 24.8.0
+    hooks:
+      - id: black
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.1.1
+    hooks:
+      - id: flake8
+        files: ^src/
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.11.2
+    hooks:
+      - id: mypy
+        language: system
+        files: ^src/
+
+  - repo: local
+    hooks:
+      - id: radon-complexity
+        name: Radon Cyclomatic Complexity & Halstead
+        entry: bash -c "radon cc src -a -nc && radon hal src"
+        language: system
+        pass_filenames: false

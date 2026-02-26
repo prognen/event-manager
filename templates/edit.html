@@ -1,0 +1,1348 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EventManager - Редактирование сессии</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <style>
+    header {
+      position: fixed;
+      width: 100%;
+      top: 0;
+      left: 0;
+      z-index: 1000;
+    }
+    .brand-logo {
+      font-size: 24px; 
+      font-weight: bold; 
+      color: white;
+      margin-left: 20px;
+      font-family: 'Arial', sans-serif;
+    }
+    main {
+      margin-top: 80px;
+    }
+    .edit-container {
+      padding: 20px;
+    }
+    .edit-card {
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    .edit-header {
+      margin-bottom: 20px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .action-section {
+      margin-bottom: 30px;
+    }
+    .action-section h5 {
+      margin-bottom: 20px;
+      color: #5c6bc0;
+    }
+    .action-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 15px;
+    }
+    .action-card {
+      padding: 15px;
+      border-radius: 8px;
+      background: #f5f5f5;
+      transition: all 0.3s ease;
+    }
+    .action-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .action-card i {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 2.5rem;
+      color: #5c6bc0;
+    }
+    /* Стиль для поднятия лейблов в полях ввода */
+    .input-field label {
+        transform: translateY(-14px) scale(0.8);
+        transform-origin: 0 0;
+    }
+    #extend-session-modal .modal-content {
+        height: 400px; /* Устанавливаем достаточную высоту для окна */
+        overflow-y: auto; /* Добавляем прокрутку, если контента слишком много */
+    }
+    /* Дополнительные стили для datetimepicker */
+    .datetimepicker {
+        margin-top: 10px;
+    }
+
+    .input-field label {
+        position: absolute;
+        top: 0;
+        left: 0;
+        pointer-events: none;  /* Чтобы метка не мешала вводить текст */
+        font-size: 1rem;  /* Можете настроить размер шрифта для меток */
+        color: #000;  /* Цвет текста метки */
+        transform: translateY(-50%);  /* Положение метки сверху */
+    }
+
+    .input-field input:focus + label,
+    .input-field input:not(:placeholder-shown) + label {
+        transform: translateY(-50%);  /* Для фокуса или заполненного поля */
+        font-size: 1rem;  /* Размер шрифта метки */
+    }
+
+    .input-field input {
+        padding-top: 1.5rem;  /* Место для метки */
+    }
+    .transport-badge {
+      display: inline-block;
+      padding: 0 5px;
+      background-color: #e3f2fd;
+      border-radius: 3px;
+      font-size: 0.8em;
+      color: #1976d2;
+      margin: 0 5px;
+    }
+    #history-list {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .history-item {
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .history-item .time {
+      font-size: 0.8em;
+      color: #666;
+    }
+
+    .history-item.added {
+      border-left: 4px solid #4caf50;
+    }
+
+    .history-item.removed {
+      border-left: 4px solid #f44336;
+    }
+
+    .history-item.changed {
+      border-left: 4px solid #ff9800;
+    }
+  </style>
+</head>
+<body>
+  <!-- Навигация -->
+  <header>
+    <nav class="indigo">
+      <div class="nav-wrapper">
+        <a href="/" class="brand-logo left">EventManager</a>
+        <ul class="right">
+          <li><a href="/profile"><i class="material-icons">arrow_back</i></a></li>
+        </ul>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Основной контент -->
+  <main>
+    <div class="container edit-container">
+      <div class="row">
+        <div class="col s12">
+          <!-- Заголовок с основной информацией -->
+          <div class="edit-card">
+            <div class="edit-header">
+              <div class="edit-header">
+                <h4>Редактирование сессии 
+                  {% if session_parts %}
+                    {% for part in session_parts %}
+                      {{ part.from_venue.name }}
+                      {% if not loop.last %} → {% endif %}
+                    {% endfor %}
+                    → {{ session_parts[-1].to_venue.name }}
+                  {% else %}
+                    (маршрут не задан)
+                  {% endif %}
+                </h4>
+                <span class="badge blue white-text">ID: {{ session.session_id }}</span>
+              </div>
+            </div>
+            
+            <div class="row">
+              <div class="col s12 m6">
+                <p><strong>Даты:</strong> {{ session.start_time.strftime('%d.%m.%Y') }} - {{ session.end_time.strftime('%d.%m.%Y') }}</p>
+                <p><strong>Транспорт:</strong> {{ session.transport }}</p>
+              </div>
+              <div class="col s12 m6">
+                <p><strong>Общая стоимость:</strong> {{ session.cost }} руб.</p>
+              </div>
+            </div>
+          </div>
+          <!-- Секция текущих развлечений и размещений -->
+          <div class="edit-card">
+            <div class="row">
+              <div class="col s12">
+                <!-- Раздел с развлечениями -->
+                <div class="section">
+                  <div class="section-header">
+                    <h5><i class="material-icons left">local_activity</i> Текущие активности:</h5>
+                    <a href="#add-activity-modal" class="btn waves-effect waves-light blue modal-trigger">
+                        <i class="material-icons left">add</i>Добавить
+                    </a>
+                  </div>
+                  <div class="row">
+                    {% for act in session.activities %}
+                    <div class="col s12 m6">
+                      <div class="card-panel grey lighten-4">
+                        <strong>{{ act.activity_type }}</strong>
+                        <p>
+                          <i class="material-icons tiny">location_on</i> 
+                          {{ act.venue.name }}, {{ act.address }}
+                        </p>
+                        <p>
+                          <i class="material-icons tiny">access_time</i> 
+                          {{ act.activity_time.strftime('%d.%m.%Y %H:%M') }} ({{ act.duration }})
+                        </p>
+                        <div class="right-align">
+                          <a href="#edit-activity-modal" 
+                            class="btn-small waves-effect waves-light blue modal-trigger edit-activity" 
+                            data-id="{{ act.activity_id }}">
+                            <i class="material-icons tiny">edit</i> Изменить
+                          </a>
+                          <a href="#" class="btn-small waves-effect waves-light red delete-activity" data-id="{{ act.activity_id }}">
+                            <i class="material-icons tiny">delete</i> Удалить
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                    {% else %}
+                    <div class="col s12">
+                      <p>Нет запланированных развлечений</p>
+                    </div>
+                    {% endfor %}
+                  </div>
+                </div>
+
+                <!-- Раздел с проживанием -->
+                <div class="section">
+                  <div class="section-header">
+                    <h5><i class="material-icons left">hotel</i> Текущее размещение:</h5>
+                    <a href="#add-lodging-modal" class="btn waves-effect waves-light blue modal-trigger">
+                        <i class="material-icons left">add</i>Добавить
+                    </a>
+                  </div>
+                  <div class="row">
+                    {% for lod in session.lodgings %}
+                    <div class="col s12 m6">
+                      <div class="card-panel grey lighten-4">
+                        <strong>{{ lod.name }}</strong> ({{ lod.type }})
+                        <p>
+                          <i class="material-icons tiny">star</i> 
+                          Рейтинг: {{ lod.rating }}/5
+                        </p>
+                        <p>
+                          <i class="material-icons tiny">location_on</i> 
+                          {{ lod.venue.name }}, {{ lod.address }}
+                        </p>
+                        <p>
+                          <i class="material-icons tiny">date_range</i> 
+                          {{ lod.check_in.strftime('%d.%m.%Y') }} - {{ lod.check_out.strftime('%d.%m.%Y') }}
+                        </p>
+                        <p>
+                          <i class="material-icons tiny">attach_money</i> 
+                          {{ lod.price }} руб.
+                        </p>
+                        <div class="right-align">
+                          <a href="#edit-lodging-modal" class="btn-small waves-effect waves-light blue modal-trigger edit-lodging" 
+                            data-id="{{ lod.lodging_id }}">
+                            <i class="material-icons tiny">edit</i> Изменить
+                          </a>
+                          <a href="#" class="btn-small waves-effect waves-light red delete-lodging" data-id="{{ lod.lodging_id }}">
+                            <i class="material-icons tiny">delete</i> Удалить
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                    {% else %}
+                    <div class="col s12">
+                      <p>Проживание не забронировано</p>
+                    </div>
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Секция изменения маршрута -->
+          <div class="edit-card">
+            <div class="action-section">
+              <h5><i class="material-icons left">map</i> Изменение программы</h5>
+              <div class="action-grid">
+                <!-- Кнопка изменения транспорта -->
+                <div class="action-card center-align">
+                  <i class="material-icons">directions_transit</i>
+                  <h6>Изменить транспорт</h6>
+                  <a href="#change-transport-modal" class="btn waves-effect waves-light blue modal-trigger">
+                    Изменить
+                  </a>
+                </div>
+
+                <!-- Кнопка добавления города -->
+                <div class="action-card center-align">
+                  <i class="material-icons">add_location</i>
+                  <h6>Добавить площадку</h6>
+                  <a href="#add-venue-modal" class="btn waves-effect waves-light blue modal-trigger">
+                    Добавить
+                  </a>
+                </div>
+
+                <!-- Кнопка удаления города -->
+                <div class="action-card center-align">
+                  <i class="material-icons">remove_circle</i>
+                  <h6>Удалить площадку</h6>
+                  <a href="#remove-venue-modal" class="btn waves-effect waves-light red modal-trigger">
+                    Удалить
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Секция управления -->
+          <div class="edit-card">
+            <div class="action-section">
+              <h5><i class="material-icons left">settings</i> Управление сессией</h5>
+              <div class="action-grid">
+                <!-- Кнопка продления путешествия -->
+                <div class="action-card center-align">
+                    <i class="material-icons">calendar_today</i>
+                    <h6>Продлить сессию</h6>
+                    <a href="#extend-session-modal" class="btn waves-effect waves-light blue modal-trigger">
+                    Продлить
+                    </a>
+                </div>
+                <!-- Кнопка отмены изменений -->
+                <div class="action-card center-align">
+                  <i class="material-icons">undo</i>
+                  <h6>История изменений</h6>
+                  <a href="#history-modal" class="btn waves-effect waves-light orange modal-trigger">Показать
+                  </a>
+                </div>
+                
+                <!-- Кнопка удаления путешествия -->
+                <div class="action-card center-align">
+                    <i class="material-icons">delete</i>
+                    <h6>Удалить сессию</h6>
+                    <a href="#delete-session-modal" 
+                      class="btn waves-effect waves-light red modal-trigger">
+                      Удалить
+                    </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Модальные окна -->
+  <!-- Модальное окно изменения транспорта -->
+<div id="change-transport-modal" class="modal">
+    <div class="modal-content">
+      <h4>Изменение транспорта</h4>
+      <form id="transport-form">
+        <div class="input-field">
+          <select id="transport-select" required>
+            <option value="" disabled selected>Выберите транспорт</option>
+            <option value="Самолет">Самолет</option>
+            <option value="Поезд">Поезд</option>
+            <option value="Автобус">Автобус</option>
+            <option value="Автомобиль">Автомобиль</option>
+            <option value="Паром">Паром</option>
+          </select>
+          <label>Транспорт</label>
+        </div>
+        <input type="hidden" id="program_id" value="{{ session.program_id if session.program_id else '' }}">
+      </form>
+    </div>
+    <div class="modal-footer">
+      <a href="#!" class="modal-close waves-effect waves-green btn-flat">Отмена</a>
+      <button type="submit" form="transport-form" class="waves-effect waves-green btn blue">Сохранить</button>
+    </div>
+</div>
+
+<!-- Модальное окно удаления города -->
+<div id="remove-venue-modal" class="modal">
+  <div class="modal-content">
+    <h4>Удаление площадки из маршрута</h4>
+    
+    <!-- Отображение текущего маршрута -->
+    <div class="current-route-section">
+      <h5>Текущий маршрут:</h5>
+      <div class="route-path">
+        {% if session_parts %}
+          {{ session_parts[0].from_venue.name }}
+          {% for part in session_parts %}
+            → {{ part.to_venue.name }}
+          {% endfor %}
+        {% else %}
+          маршрут не задан
+        {% endif %}
+      </div>
+    </div>
+    
+    <form id="remove-venue-form">
+      <input type="hidden" name="event_id" value="{{ session.event_id }}">
+      
+      <div class="input-field">
+        <select name="venue_id" id="venue-to-remove" required>
+          <option value="" disabled selected>Выберите город для удаления</option>
+          {% if session_parts %}
+            <!-- Для первого города (только отправления) -->
+            <option value="{{ session_parts[0].from_venue.venue_id }}">
+              {{ session_parts[0].from_venue.name }} (начальная точка)
+            </option>
+            
+            <!-- Для промежуточных городов (только пункты назначения) -->
+            {% for part in session_parts %}
+              {% if not loop.last %}
+                <option value="{{ part.to_venue.venue_id }}">
+                  {{ part.to_venue.name }}
+                </option>
+              {% endif %}
+            {% endfor %}
+            
+            <!-- Для последнего города -->
+            <option value="{{ session_parts[-1].to_venue.venue_id }}">
+              {{ session_parts[-1].to_venue.name }} (конечная точка)
+            </option>
+          {% endif %}
+        </select>
+        <label>Город для удаления</label>
+      </div>
+      
+      <div class="input-field">
+        <p>
+          <label>
+            <input type="checkbox" name="keep_segments" class="filled-in" checked="checked" />
+            <span>Сохранить сегменты маршрута (если возможно)</span>
+          </label>
+        </p>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <a href="#!" class="modal-close waves-effect waves-green btn-flat">Отмена</a>
+    <button type="submit" form="remove-venue-form" class="waves-effect waves-green btn red">Удалить</button>
+  </div>
+</div>
+
+<!-- Модальное окно продления путешествия -->
+<div id="extend-session-modal" class="modal">
+    <div class="modal-content">
+        <h4>Продление сессии</h4>
+        <form id="extend-form">
+            <div class="input-field">
+                <input type="text" id="new-end-date" class="datepicker">
+                <label for="new-end-date">Новая дата окончания</label>
+            </div>
+            <input type="hidden" name="route_id" value="{{ session.session_id }}">
+        </form>
+    </div>
+    <div class="modal-footer">
+        <a href="#!" class="modal-close waves-effect waves-green btn-flat">Отмена</a>
+        <button type="submit" form="extend-form" class="waves-effect waves-green btn blue">Сохранить</button>
+    </div>
+</div>
+
+<!-- Модальное окно добавления развлечения -->
+<div id="add-activity-modal" class="modal">
+    <div class="modal-content">
+        <h4>Добавление активности</h4>
+        <form id="activity-form" method="post" action="#">
+            <div class="input-field">
+                <select name="activity_type" id="activity_type" required>
+                    <option value="" disabled selected>Выберите тип мероприятия</option>
+                    <option value="Выставка">Выставка</option>
+                    <option value="Достопримечательность">Достопримечательность</option>
+                    <option value="Концерт">Концерт</option>
+                    <option value="Музей">Музей</option>
+                    <option value="Прогулка">Прогулка</option>
+                    <option value="Фестиваль">Фестиваль</option>
+                </select>
+                <label>Тип мероприятия</label>
+            </div>
+
+            <div class="input-field">
+                <input type="datetime-local" name="activity_time" id="activity_time" required>
+                <label for="activity_time">Дата и время</label>
+            </div>
+            
+            <div class="input-field">
+                <input type="text" name="duration" id="duration" required>
+                <label for="duration">Продолжительность</label>
+            </div>
+            
+            <div class="input-field">
+                <input type="text" name="address" id="address" required>
+                <label for="address">Адрес</label>
+            </div>
+            
+            <div class="input-field">
+                <select name="city" id="city" required>
+                    <option value="" disabled selected>Выберите город</option>
+                    {% for venue in venues %}
+                        <option value="{{ venue.id }}">{{ venue.name }}</option>
+                    {% endfor %}
+                </select>
+                <label>Город</label>
+            </div>
+            
+        </form>
+    </div>
+    <div class="modal-footer">
+        <a href="#!" class="modal-close waves-effect waves-green btn-flat">Отмена</a>
+        <button type="submit" form="activity-form" class="waves-effect waves-green btn blue">Добавить</button>
+    </div>
+</div>
+
+<!-- Модальное окно добавления размещения -->
+<div id="add-lodging-modal" class="modal">
+    <div class="modal-content">
+        <h4>Добавление размещения</h4>
+        <form id="lodging-form" method="post" action="#">
+            <div class="input-field">
+                <input type="text" name="name" id="name" required>
+                <label for="name">Название</label>
+            </div>
+            <div class="input-field">
+                <input id="rating" type="number" step="1">
+                <label for="rating">Рейтинг</label>
+            </div>
+            <div class="input-field">
+                <input id="price" type="number">
+                <label for="price">Стоимость</label>
+            </div>
+            <div class="input-field">
+                <select name="type" id="type" required>
+                    <option value="" disabled selected>Выберите тип размещения</option>
+                    <option value="Аппартаменты">Аппартаменты</option>
+                    <option value="Квартира">Квартира</option>
+                    <option value="Отель">Отель</option>
+                    <option value="Хостел">Хостел</option>
+                </select>
+                <label>Тип размещения</label>
+            </div>
+
+            <div class="input-field">
+                <input type="datetime-local" name="check_in" id="check_in" required>
+                <label for="activity_time">Дата и время въезда</label>
+            </div>
+
+            <div class="input-field">
+                <input type="datetime-local" name="check_out" id="check_out" required>
+                <label for="activity_time">Дата и время выезда</label>
+            </div>
+            
+            <div class="input-field">
+                <input type="text" name="address_a" id="address_a" required>
+                <label for="address_a">Адрес</label>
+            </div>
+            
+            <div class="input-field">
+                <select name="city_a" id="city_a" required>
+                    <option value="" disabled selected>Выберите город</option>
+                    {% for venue in venues %}
+                        <option value="{{ venue.id }}">{{ venue.name }}</option>
+                    {% endfor %}
+                </select>
+                <label>Город</label>
+            </div>
+            
+        </form>
+    </div>
+    <div class="modal-footer">
+        <a href="#!" class="modal-close waves-effect waves-green btn-flat">Отмена</a>
+        <button type="submit" form="lodging-form" class="waves-effect waves-green btn blue">Добавить</button>
+    </div>
+</div>
+
+<!-- Модальное окно редактирования размещения -->
+<div id="edit-lodging-modal" class="modal">
+    <div class="modal-content">
+        <h4>Редактирование размещения</h4>
+        <form id="edit-lodging-form" method="post" action="#">
+            <input type="hidden" id="edit-lod-id" name="lodging_id">
+            
+            <div class="input-field">
+                <input type="text" id="edit-name" name="name" required>
+                <label for="edit-name">Название</label>
+            </div>
+            
+            <div class="input-field">
+                <input type="text" name="address" id="edit-address" required>
+                <label for="edit-address">Адрес</label>
+            </div>
+            
+            <div class="input-field">
+                <input type="datetime-local" name="check_in" id="edit-check_in" required>
+                <label for="edit-check_in">Дата и время въезда</label>
+            </div>
+
+            <div class="input-field">
+                <input type="datetime-local" name="check_out" id="edit-check_out" required>
+                <label for="edit-check_out">Дата и время выезда</label>
+            </div>
+            
+        </form>
+    </div>
+    <div class="modal-footer">
+        <a href="#!" class="modal-close waves-effect waves-green btn-flat">Отмена</a>
+        <button type="submit" form="edit-lodging-form" class="waves-effect waves-green btn blue">Сохранить</button>
+    </div>
+</div>
+
+<!-- Модальное окно редактирования развлечения -->
+<div id="edit-activity-modal" class="modal">
+    <div class="modal-content">
+        <h4>Редактирование активности</h4>
+        <form id="edit-activity-form" method="post" action="#">
+            <input type="hidden" id="edit-activity_id" name="activity_id">
+            
+            <div class="input-field">
+                <input type="text" id="edit-activity_type" name="activity_type" readonly>
+                <label for="edit-activity_type">Тип мероприятия</label>
+            </div>
+            
+            <div class="input-field" id="datetime-field">
+                <input type="datetime-local" name="edit-activity_time" id="edit-activity_time">
+                <label for="edit-activity_time">Дата и время</label>
+            </div>
+            
+            <div class="input-field">
+                <input type="text" name="edit-duration" id="edit-duration" required>
+                <label for="edit-duration">Продолжительность</label>
+            </div>
+            
+            <div class="input-field">
+                <input type="text" name="edit-address_a" id="edit-address_a" readonly>
+                <label for="edit-address_a">Адрес</label>
+            </div>
+            
+        </form>
+    </div>
+    <div class="modal-footer">
+        <a href="#!" class="modal-close waves-effect waves-green btn-flat">Отмена</a>
+        <button type="submit" form="edit-activity-form" class="waves-effect waves-green btn blue">Сохранить</button>
+    </div>
+  </div>
+
+<div id="add-venue-modal" class="modal">
+    <div class="modal-content">
+      <h4>Добавление площадки в маршрут</h4>
+      
+      <!-- Отображение текущего маршрута -->
+      <div class="current-route-section">
+        <h5>Текущий маршрут:</h5>
+        <div class="route-path">
+          {% if session_parts %}
+            {{ session_parts[0].from_venue.name }}
+            {% for part in session_parts %}
+              → {{ part.to_venue.name }}
+            {% endfor %}
+          {% else %}
+            маршрут не задан
+          {% endif %}
+        </div>
+      </div>
+      
+      <form id="add-venue-form">
+        <input type="hidden" name="event_id" value="{{ session.event_id }}">
+        
+        <div class="input-field">
+          <select name="new_venue_id" id="new-venue-select" required>
+            <option value="" disabled selected>Выберите город</option>
+            {% for venue in venues %}
+              {% set city_in_route = false %}
+              {% for route_part in session_parts %}
+                {% if venue.id == route_part.from_venue.venue_id or venue.id == route_part.to_venue.venue_id %}
+                  {% set city_in_route = true %}
+                {% endif %}
+              {% endfor %}
+              {% if not city_in_route %}
+                <option value="{{ venue.id }}">{{ venue.name }}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+          <label>Новый город</label>
+        </div>
+        
+        <div class="input-field">
+          <select name="after_venue_id" id="after-venue-select" required>
+            <option value="" disabled selected>Выберите после какого города</option>
+            {% for route_part in session_parts %}
+              <option value="{{ route_part.from_venue.venue_id }}">
+                После {{ route_part.from_venue.name }}
+              </option>
+              {% if loop.last %}
+                <option value="{{ route_part.to_venue.venue_id }}">
+                  После {{ route_part.to_venue.name }} (конец маршрута)
+                </option>
+              {% endif %}
+            {% endfor %}
+          </select>
+          <label>Позиция в маршруте</label>
+        </div>
+        
+        <div class="input-field">
+          <select name="transport" id="city-transport-select" required>
+            <option value="" disabled selected>Выберите транспорт</option>
+            <option value="Самолет">Самолет</option>
+            <option value="Поезд">Поезд</option>
+            <option value="Автобус">Автобус</option>
+            <option value="Автомобиль">Автомобиль</option>
+          </select>
+          <label>Транспорт до новой площадки</label>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <a href="#!" class="modal-close waves-effect waves-green btn-flat">Отмена</a>
+      <button type="submit" form="add-venue-form" class="waves-effect waves-green btn blue">Добавить</button>
+    </div>
+</div>
+<div id="history-modal" class="modal">
+  <div class="modal-content">
+    <h4>История изменений</h4>
+    <ul id="history-list" class="collection">
+      <!-- Сюда будут добавляться элементы истории -->
+    </ul>
+  </div>
+  <div class="modal-footer">
+    <a href="#!" class="modal-close waves-effect waves-green btn-flat">Закрыть</a>
+    <a href="#!" class="waves-effect waves-green btn-flat red-text" id="clear-history">Очистить историю</a>
+  </div>
+</div>
+<div id="delete-session-modal" class="modal">
+  <div class="modal-content">
+    <h4>Удаление сессии</h4>
+    <p>вы уверены, что хотите удалить эту сессию? Это действие нельзя отменить.</p>
+  </div>
+  <div class="modal-footer">
+    <a href="#!" class="modal-close waves-effect waves-green btn-flat">Отмена</a>
+    <a href="#!" class="waves-effect waves-light btn red modal-close" id="confirm-delete">Удалить</a>
+  </div>
+</div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      M.Modal.init(document.querySelectorAll('.modal'));
+      M.FormSelect.init(document.querySelectorAll('select'));
+
+      var extendModal = M.Modal.getInstance(document.getElementById('extend-session-modal'));
+      var currentEndDate = new Date("{{ session.end_time }}");
+      if (isNaN(currentEndDate.getTime())) {
+            currentEndDate = new Date();
+        }
+
+        extendModal.options.onOpenStart = function() {
+            $('#new-end-date').datepicker({
+            format: 'yyyy-mm-dd',
+            minDate: currentEndDate,
+            defaultDate: currentEndDate,
+            setDefaultDate: true,
+            autoClose: true,
+            i18n: {
+                cancel: 'Отмена',
+                months: ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'],
+                monthsShort: ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'],
+                weekdays: ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'],
+                weekdaysShort: ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб']
+            }
+            });
+        };
+      $('#extend-form').on('submit', function(e) {
+            e.preventDefault();
+            
+            var newEndDate = $('#new-end-date').val();
+            var routeId = "{{ session.session_id }}";
+            
+            if (!newEndDate) {
+            alert('Пожалуйста, выберите новую дату окончания');
+            return;
+            }
+            
+            // Проверка, что новая дата действительно позже текущей
+            var selectedDate = new Date(newEndDate);
+            if (selectedDate <= currentEndDate) {
+            alert('Новая дата окончания должна быть позже текущей даты окончания');
+            return;
+            }
+
+            // Отправка данных на сервер
+            $.ajax({
+            url: '/session/extend/' + routeId,
+            method: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                new_end_date: newEndDate
+            }),
+            success: function(response) {
+                alert('Сессия успешно продлена!');
+                extendModal.close();
+                window.location.reload();
+            },
+            error: function(xhr) {
+                alert('Ошибка: ' + xhr.responseText);
+            }
+            });
+        });
+      $('#activity-form').on('submit', function(e) {
+        e.preventDefault();
+        
+        // Собираем данные формы в объект
+        const formData = {
+            activity_type: $('#activity_type').val(),
+            activity_time: $('#activity_time').val(),
+            duration: $('#duration').val(),
+            address: $('#address').val(),
+            city: parseInt($('#city').val())
+        };
+        // Отправляем как JSON
+        $.ajax({
+            url: '/activity/add/{{ session.session_id }}',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(formData), 
+            success: function(response) {
+                alert("Активность добавлена успешно.");
+                $('#add-activity-modal').modal('close');
+                addHistoryEntry('add', 'развлечение', $('#activity_type').val(), {
+                  description: `В городе ${$('#city option:selected').text()}`
+                });
+                window.location.reload();
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                alert('Ошибка при добавлении активности: ' + error);
+            }
+        });
+      });
+      $('.delete-activity').click(function(e) {
+        e.preventDefault();
+        var id = $(this).data('id');
+        
+        if (confirm('Вы уверены, что хотите удалить это развлечение?')) {
+            $.ajax({
+                url: `/session/activity/delete/${id}?route_id={{ session.session_id }}`,
+                type: 'DELETE',
+                success: function() {
+                  const entName = $(this).closest('.card-panel').find('strong').text();
+                  addHistoryEntry('remove', 'развлечение', entName);
+                  window.location.reload();
+                },
+                error: function() {
+                    alert('Ошибка при удалении');
+                }
+            });
+        }
+      });
+      $('#lodging-form').on('submit', function(e) {
+        e.preventDefault();
+        
+        // Собираем данные формы в объект
+        const formData = {
+            name: $('#name').val(),
+            rating: $('#rating').val(),
+            price: $('#price').val(),
+            address: $('#address_a').val(),
+            type: $('#type').val(),
+            check_in: $('#check_in').val(),
+            check_out: $('#check_out').val(),
+            city: parseInt($('#city_a').val())
+        };
+        console.log("Address:", formData.address);
+        $.ajax({
+            url: '/lodging/add/{{ session.session_id }}',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(formData), 
+            success: function(response) {
+                alert("Размещение добавлено успешно.");
+                $('#add-lodging-modal').modal('close');
+                window.location.reload();
+            },
+            error: function(xhr, status, error) {
+                console.error('Error:', error);
+                alert('Ошибка при добавлении размещения: ' + error);
+            }
+        });
+      });
+      $('.delete-lodging').click(function(e) {
+        e.preventDefault();
+        var id = $(this).data('id');
+        
+        if (confirm('Вы уверены, что хотите удалить это размещение?')) {
+            $.ajax({
+                url: `/session/lodging/delete/${id}?route_id={{ session.session_id }}`,
+                type: 'DELETE',
+                success: function() {
+                    window.location.reload();
+                },
+                error: function() {
+                    alert('Ошибка при удалении');
+                }
+            });
+        }
+      });
+      $('#transport-form').on('submit', function(e) {
+        e.preventDefault();
+        
+        const transport = $('#transport-select').val();
+        const program_id = parseInt($('#program_id').val());
+        
+        if (!transport) {
+            alert('Пожалуйста, выберите транспорт');
+            return;
+        }
+        const formData = {
+            transport: transport,
+            program_id: program_id
+        };
+
+        $.ajax({
+            url: `/session/change_transport/{{ session.session_id }}`,
+            type: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify(formData),
+            success: function(response) {
+              console.log('Ответ сервера:', response);
+              alert("Транспорт успешно изменен");
+              $('#change-transport-modal').modal('close');
+              addHistoryEntry('update', 'транспорт', $('#transport-select').val(), {
+                description: 'Изменен транспорт для всего маршрута'
+              });
+              window.location.reload();
+            },
+              error: function(xhr, status, error) {
+              console.error('Ошибка:', xhr.responseText);
+              alert('Ошибка при изменении транспорта: ' + xhr.responseText);
+            }
+        });
+        });
+      $('#change-transport-modal').modal({
+        onOpenStart: function() {
+            const currentTransport = "{{ session.transport }}";
+            $('#transport-select').val(currentTransport);
+            M.FormSelect.init($('#transport-select'));
+        }
+      });
+      $(document).on('click', '.edit-lodging', function(e) {
+        e.preventDefault();
+        const accId = $(this).data('id');
+        
+        $.get(`/lodging/get/${accId}`, function(response) {
+            const data = response.accommodation || response;
+            if (!data) {
+                alert('Данные размещения не получены');
+                return;
+            }
+
+            $('#edit-lod-id').val(data.id || data.lodging_id);
+            $('#edit-name').val(data.name || '');
+            $('#edit-address').val(data.address || '');
+
+            // Функция для форматирования даты
+            const formatDateForInput = (dateStr) => {
+                if (!dateStr) return '';
+                
+                try {
+                    if (typeof dateStr === 'string' && dateStr.includes('T')) {
+                        return dateStr.substring(0, 16);
+                    }
+                    const dateObj = new Date(dateStr);
+                    if (isNaN(dateObj.getTime())) {
+                        console.error('Invalid date:', dateStr);
+                        return '';
+                    }
+                    
+                    return dateObj.toISOString().substring(0, 16);
+                } catch (e) {
+                    console.error('Date formatting error:', e);
+                    return '';
+                }
+            };
+
+            // Заполняем даты
+            $('#edit-check_in').val(formatDateForInput(data.check_in));
+            $('#edit-check_out').val(formatDateForInput(data.check_out));
+
+            $('#edit-name').prop('readonly', true);
+            $('#edit-address').prop('readonly', true);
+
+            M.updateTextFields(); 
+            
+            const modal = M.Modal.getInstance($('#edit-lodging-modal'));
+            modal.open();
+        }).fail(function(error) {
+            console.error('Error loading accommodation data:', error);
+            alert('Ошибка при загрузке данных размещения: ' + error.statusText);
+        });
+      });
+
+      $('#edit-lodging-form').on('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = {
+            lodging_id: $('#edit-lod-id').val(),
+            check_in: $('#edit-check_in').val(),
+            check_out: $('#edit-check_out').val(),
+        };
+        if (!formData.check_in || !formData.check_out) {
+            alert('Пожалуйста, укажите обе даты');
+            return;
+        }
+        $.ajax({
+            url: `/lodgings/${formData.lodging_id}`,
+            method: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify(formData),
+            success: function(response) {
+                alert("Размещение успешно обновлено!");
+                $('#edit-lodging-modal').modal('close');
+                window.location.reload();
+            },
+            error: function(xhr) {
+                alert('Ошибка: ' + (xhr.responseJSON?.detail || xhr.statusText));
+            }
+        });
+      });
+      
+      $(document).on('click', '.edit-activity', function(e) {
+        e.preventDefault();
+        const entId = $(this).data('id');
+        
+        $.get(`/activity/get/${entId}`, function(response) {
+            const data = response.entertainment || response;
+            console.log(data)
+            if (!data) {
+                alert('Данные развлечения не получены');
+                return;
+            }
+
+            $('#edit-activity_id').val(data.id || data.activity_id);
+            $('#edit-activity_type').val(data.activity_type || '');
+            $('#edit-duration').val(data.duration || '');
+            $('#edit-address_a').val(data.address || '');
+
+            const formatDateForInput = (dateStr) => {
+                if (!dateStr) return '';
+                
+                try {
+                    if (typeof dateStr === 'string' && dateStr.includes('T')) {
+                        return dateStr.substring(0, 16);
+                    }
+                    const dateObj = new Date(dateStr);
+                    if (isNaN(dateObj.getTime())) {
+                        console.error('Invalid date:', dateStr);
+                        return '';
+                    }
+                    
+                    return dateObj.toISOString().substring(0, 16);
+                } catch (e) {
+                    console.error('Date formatting error:', e);
+                    return '';
+                }
+            };
+            $('#edit-activity_time').val(formatDateForInput(data.activity_time));
+
+            if (data.activity_type == 'Концерт' || data.activity_type == 'Фестиваль' || data.activity_type == 'Выставка') 
+            {
+                console.log("DATETIME READONLY")
+                $('#edit-activity_time').prop('readonly', true);
+            } 
+            $('#edit-address_a').prop('readonly', true).show();
+
+            M.updateTextFields();
+            
+            const modal = M.Modal.getInstance($('#edit-activity-modal'));
+            modal.open();
+        }).fail(function(error) {
+            console.error('Error loading entertainment data:', error);
+            alert('Ошибка при загрузке данных активности: ' + error.statusText);
+        });
+      });
+
+      $('#edit-activity-form').on('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = {
+            activity_id: $('#edit-activity_id').val(),
+            duration: $('#edit-duration').val()
+        };
+
+        // Добавляем дату/время только если поле активно
+        if (!$('#edit-activity_time').prop('disabled')) {
+            formData.activity_time = $('#edit-activity_time').val();
+            if (!formData.activity_time) {
+                alert('Пожалуйста, укажите дату и время');
+                return;
+            }
+        }
+
+        $.ajax({
+            url: `/entertainment/${formData.activity_id}`,
+            method: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify(formData),
+            success: function(response) {
+                alert("Активность успешно обновлена!");
+                $('#edit-activity-modal').modal('close');
+                window.location.reload();
+            },
+            error: function(xhr) {
+                alert('Ошибка: ' + (xhr.responseJSON?.detail || xhr.statusText));
+            }
+        });
+      });
+      $(document).ready(function() {
+        $('#delete-session-modal').modal();
+        
+        $('#confirm-delete').on('click', function(e) {
+          e.preventDefault();
+          
+          $.ajax({
+            url: '/session/delete/{{ session.session_id }}',
+            method: 'POST',
+            success: function() {
+              window.location.href = '/profile';
+            },
+            error: function(xhr) {
+              alert('Ошибка при удалении: ' + xhr.responseText);
+            }
+          });
+        });
+      });
+    });
+$(document).ready(function() {
+    $('#add-venue-modal').modal({
+      onOpenStart: function() {
+        // При открытии модального окна сбрасываем значения
+        $('#new-venue-select, #after-venue-select, #city-transport-select').val('');
+        M.FormSelect.init($('#new-venue-select, #after-venue-select, #city-transport-select'));
+      }
+    });
+    $('#add-venue-form').on('submit', function(e) {
+      e.preventDefault();
+      
+      const formData = {
+        event_id: $('input[name="event_id"]').val(),
+        new_venue_id: $('#new-venue-select').val(),
+        after_venue_id: $('#after-venue-select').val(),
+        transport: $('#city-transport-select').val()
+      };
+      const currentCities = [];
+      {% for route_part in session_parts %}
+        currentCities.push({{ route_part.from_venue.venue_id }});
+          {% if loop.last %}
+            currentCities.push({{ route_part.to_venue.venue_id }});
+          {% endif %}
+      {% endfor %}
+      if (currentCities.includes(parseInt(formData.new_venue_id))) {
+        M.toast({html: 'Эта площадка уже есть в программе', classes: 'red'});
+        return;
+      }
+      $.ajax({
+        url: '/session/add_venue',
+        method: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(formData),
+        success: function(response) {
+          M.toast({html: 'Площадка успешно добавлена!', classes: 'green'});
+          $('#add-venue-modal').modal('close');
+          addHistoryEntry('add', 'город', $('#new-venue-select option:selected').text(), {
+            description: `Добавлен после города ${$('#after-venue-select option:selected').text()}`
+          });
+          window.location.reload();
+        },
+        error: function(xhr) {
+          const errorMsg = xhr.responseJSON?.detail || 'Ошибка сервера';
+          M.toast({html: errorMsg, classes: 'red'});
+        }
+      });
+    });
+  });
+
+  $('#remove-venue-modal').modal({
+  onOpenStart: function() {
+    M.FormSelect.init($('#venue-to-remove'));
+  }
+});
+
+// Обработчик отправки формы удаления города
+$('#remove-venue-form').on('submit', function(e) {
+  e.preventDefault();
+  
+  const cityId = $('#venue-to-remove').val();
+  const travelId = $('input[name="event_id"]').val();
+  const keepSegments = $('input[name="keep_segments"]').is(':checked');
+  
+  if (!cityId) {
+    M.toast({html: 'Пожалуйста, выберите площадку для удаления', classes: 'red'});
+    return;
+  }
+  
+  if (!confirm(`вы уверены, что хотите удалить эту площадку из программы? ${keepSegments ? 'Соседние сегменты будут объединены.' : ''}`)) {
+    return;
+  }
+  
+  // Отправка данных
+  $.ajax({
+    url: '/session/delete_venue',
+    method: 'DELETE',
+    contentType: 'application/json',
+    data: JSON.stringify({
+      venue_id: cityId,
+      event_id: travelId,
+      keep_segments: keepSegments
+    }),
+    success: function(response) {
+      M.toast({html: 'Площадка успешно удалена из маршрута!', classes: 'green'});
+      $('#remove-venue-modal').modal('close');
+      addHistoryEntry('remove', 'город', $('#venue-to-remove option:selected').text(), {
+        description: keepSegments ? 'С сохранением сегментов' : 'Без сохранения сегментов'
+      });
+      window.location.reload();
+    },
+    error: function(xhr) {
+      const errorMsg = xhr.responseJSON?.message || xhr.responseJSON?.detail || 'Ошибка сервера';
+      M.toast({html: errorMsg, classes: 'red'});
+    }
+  });
+});
+
+function addHistoryEntry(action, entityType, entityName, options = {}) {
+    const historyList = document.getElementById('history-list');
+    const li = document.createElement('li');
+    li.classList.add('collection-item');
+
+    const timestamp = new Date().toLocaleString('ru-RU');
+    const description = options.description || '';
+
+    li.textContent = `[${timestamp}] ${action === 'add' ? 'Добавлено' : action === 'edit' ? 'Изменено' : 'Удалено'} ${entityType}: ${entityName}. ${description}`;
+    historyList.appendChild(li);
+
+    // Сохраняем в localStorage
+    let history = JSON.parse(localStorage.getItem('history') || '[]');
+    history.push(li.textContent);
+    localStorage.setItem('history', JSON.stringify(history));
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const historyList = document.getElementById('history-list');
+    const savedHistory = JSON.parse(localStorage.getItem('history') || '[]');
+    for (const entry of savedHistory) {
+      const li = document.createElement('li');
+      li.classList.add('collection-item');
+      li.textContent = entry;
+      historyList.appendChild(li);
+    }
+
+    // Очистка истории
+    document.getElementById('clear-history').addEventListener('click', function() {
+      localStorage.removeItem('history');
+      historyList.innerHTML = '';
+    });
+  });
+$('#history-modal').modal({
+  onOpenStart: function() {
+    renderHistory(); // Обязательно вызываем при открытии
+  }
+});
+function renderHistory() {
+  try {
+    const historyStr = localStorage.getItem('eventHistory');
+    const history = historyStr ? JSON.parse(historyStr) : [];
+    const currentRouteId = "{{ session.session_id }}"; // Например, 9
+
+    console.log("Текущий routeId:", currentRouteId);
+    console.log("Все записи:", history);
+
+    // Фильтруем записи по routeId (сравниваем как строки)
+    const filteredHistory = history.filter(item => 
+      String(item.routeId) === String(currentRouteId)
+    );
+
+    console.log("Отфильтрованные записи:", filteredHistory);
+
+    const historyList = $('#history-list');
+    historyList.empty();
+
+    if (filteredHistory.length === 0) {
+      historyList.append('<li class="collection-item">История изменений пуста</li>');
+      return;
+    }
+
+    filteredHistory.forEach(entry => {
+      let icon, actionText;
+      
+      switch(entry.action) {
+        case 'add': icon = '<i class="material-icons green-text">add</i>'; actionText = 'добавлено'; break;
+        case 'remove': icon = '<i class="material-icons red-text">remove</i>'; actionText = 'удалено'; break;
+        case 'update': icon = '<i class="material-icons orange-text">edit</i>'; actionText = 'изменено'; break;
+        default: icon = '<i class="material-icons">info</i>'; actionText = 'изменение';
+      }
+      
+      const item = $(`
+        <li class="collection-item history-item ${entry.action}">
+          <div>
+            ${icon} <strong>${entry.entityType}</strong> "${entry.entityName}" ${actionText}
+            <div class="time">${entry.timestamp}</div>
+          </div>
+          ${entry.details?.description ? `<div>${entry.details.description}</div>` : ''}
+        </li>
+      `);
+      
+      historyList.append(item);
+    });
+
+  } catch (e) {
+    console.error('Ошибка при отображении истории:', e);
+    $('#history-list').html('<li class="collection-item red-text">Ошибка загрузки истории</li>');
+  }
+}
+
+// Инициализация модального окна истории
+$('#history-modal').modal({
+  onOpenStart: function() {
+    renderHistory();
+  }
+});
+
+// Очистка истории
+$('#clear-history').on('click', function() {
+  if (confirm('Вы уверены, что хотите очистить историю изменений?')) {
+    const history = JSON.parse(localStorage.getItem('eventHistory')) || [];
+    const filteredHistory = history.filter(item => item.routeId !== "{{ session.session_id }}");
+    localStorage.setItem('eventHistory', JSON.stringify(filteredHistory));
+    renderHistory();
+  }
+});
+
+  </script>
+</body>
+</html>

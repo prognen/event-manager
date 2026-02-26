@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TravelGuide - Регистрация</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+
+  <style>
+    /* Основной контент */
+    main {
+      margin-top: 90px;
+      min-height: calc(100vh - 90px);
+      display: flex;
+      align-items: center;
+    }
+
+    header {
+      position: fixed;
+      width: 100%;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+
+    .brand-logo {
+      font-size: 24px; 
+      font-weight: bold; 
+      color: white;
+      margin-left: 20px;
+      font-family: 'Arial', sans-serif;
+    }
+
+    .auth-container {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 30px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14), 
+                  0 3px 1px -2px rgba(0,0,0,0.12), 
+                  0 1px 5px 0 rgba(0,0,0,0.2);
+    }
+
+    .auth-container h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #3f51b5;
+    }
+
+    .btn {
+      width: 100%;
+      margin-top: 20px;
+      background-color: #3f51b5;
+    }
+
+    .btn:hover {
+      background-color: #303f9f;
+    }
+
+    .auth-link {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .row {
+      margin-bottom: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Навигация -->
+  <header>
+    <nav class="indigo">
+      <div class="nav-wrapper">
+        <a href="/" class="brand-logo left">TravelGuide</a>
+        <ul class="right">
+          <li>
+            <a class="dropdown-trigger" href="#!" data-target="user_dropdown">
+              <i class="material-icons">account_circle</i>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Выпадающее меню -->
+  <ul id="user_dropdown" class="dropdown-content">
+    <li><a href="/login.html">Войти</a></li>
+    <li><a href="/register.html">Регистрация</a></li>
+  </ul>
+
+  <!-- Основной контент -->
+  <main>
+    <div class="auth-container">
+      <h2>Регистрация</h2>
+      <form id="registerForm">
+        <div class="row">
+          <div class="input-field col s12">
+            <i class="material-icons prefix">person</i>
+            <input id="fio" type="text" name="fio" required>
+            <label for="fio">ФИО</label>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="input-field col s12">
+            <i class="material-icons prefix">credit_card</i>
+            <input id="number_passport" type="text" name="number_passport" required>
+            <label for="number_passport">Номер паспорта</label>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="input-field col s12">
+            <i class="material-icons prefix">phone</i>
+            <input id="phone_number" type="tel" name="phone_number" required>
+            <label for="phone_number">Номер телефона</label>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="input-field col s12">
+            <i class="material-icons prefix">email</i>
+            <input id="email" type="email" name="email" class="validate" required>
+            <label for="email">Email</label>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="input-field col s12">
+            <i class="material-icons prefix">account_circle</i>
+            <input id="login" type="text" name="login" required>
+            <label for="login">Логин</label>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="input-field col s12">
+            <i class="material-icons prefix">lock</i>
+            <input id="password" type="password" name="password" required>
+            <label for="password">Пароль</label>
+          </div>
+        </div>
+
+        <button class="btn waves-effect waves-light" type="submit">
+          Зарегистрироваться
+          <i class="material-icons right">send</i>
+        </button>
+
+        <div class="auth-link">
+          <p>Уже есть аккаунт? <a href="/login">Войдите</a></p>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      M.Dropdown.init(document.querySelectorAll('.dropdown-trigger'), {
+        coverTrigger: false,
+        constrainWidth: false
+      });
+
+      // Инициализация полей ввода
+      M.updateTextFields();
+      document.getElementById('registerForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // Собираем данные формы
+        const formData = {
+          fio: document.getElementById('fio').value,
+          number_passport: document.getElementById('number_passport').value,
+          phone_number: document.getElementById('phone_number').value,
+          email: document.getElementById('email').value,
+          login: document.getElementById('login').value,
+          password: document.getElementById('password').value,
+          is_admin: false
+        };
+        
+        if (!formData.fio.trim() || !formData.number_passport.trim() || 
+            !formData.phone_number.trim() || !formData.email.trim() || 
+            !formData.login.trim() || !formData.password.trim()) {
+          M.toast({html: 'Пожалуйста, заполните все поля', classes: 'red'});
+          return;
+        }
+        try {
+          const response = await fetch('/api/register', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify(formData)
+          });
+          
+          // Проверяем Content-Type ответа
+          const contentType = response.headers.get('content-type');
+          if (!contentType || !contentType.includes('application/json')) {
+            const text = await response.text();
+            throw new Error(`Ожидался JSON, но получен: ${text.substring(0, 100)}...`);
+          }
+          
+          const data = await response.json();
+          
+          if (!response.ok) {
+            throw new Error(data.message || `Ошибка сервера: ${response.status}`);
+          }
+          
+          localStorage.setItem('auth_token', data.access_token);
+          localStorage.setItem('user_id', data.user_id);
+          window.location.href = '/profile';
+          
+        } catch (error) {
+          console.error('Ошибка регистрации:', error);
+          M.toast({html: error.message, classes: 'red'});
+        }
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+container,cpu,mem
+test_debug-e2e-tests-run,96.06%,26.94MiB / 3.828GiB
+test_debug-app-1,2.73%,110.8MiB / 3.828GiB
+jaeger,2.17%,12.61MiB / 3.828GiB
+otel_collector,0.00%,36.9MiB / 3.828GiB

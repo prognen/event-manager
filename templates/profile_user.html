@@ -1,0 +1,422 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EventManager - Профиль</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <style>
+    header {
+      position: fixed;
+      width: 100%;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+    .brand-logo {
+      font-size: 24px; 
+      font-weight: bold; 
+      color: white;
+      margin-left: 20px;
+      font-family: 'Arial', sans-serif;
+    }
+    .profile-container {
+      margin-top: 20px;
+      padding: 20px;
+    }
+    .profile-card {
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .profile-header {
+      margin-bottom: 20px;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 10px;
+    }
+    .route-card {
+      margin-bottom: 20px;
+      border-left: 4px solid #5c6bc0;
+      padding-left: 10px;
+    }
+    
+    .no-routes {
+      text-align: center;
+      padding: 40px 0;
+    }
+    
+    .no-routes i {
+      display: block;
+      margin-bottom: 20px;
+    }
+    
+    .status-active {
+      color: #4caf50;
+      font-weight: bold;
+    }
+    
+    .badge {
+      margin-right: 10px;
+    }
+    .card-action {
+      border-top: 1px solid #eee;
+      margin-top: 15px;
+      padding-top: 15px;
+    }
+    .collection .collection-item.avatar {
+      padding-left: 72px;
+      position: relative;
+    }
+
+    .collection .collection-item.avatar .circle {
+      position: absolute;
+      width: 42px;
+      height: 42px;
+      overflow: hidden;
+      left: 15px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .collection .collection-item.avatar i.material-icons {
+      font-size: 24px;
+    }
+
+    .collection-item.avatar .title {
+      font-weight: 500;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    .secondary-content {
+      color: #5c6bc0;
+    }
+    .tabs .tab a {
+      color: #42a5f5; /* Голубой цвет */
+      opacity: 0.7; /* Немного прозрачности для неактивных вкладок */
+    }
+
+    .tabs .tab a:hover,
+    .tabs .tab a.active {
+      color: #1e88e5; /* Более насыщенный синий для активной/при наведении */
+      opacity: 1;
+    }
+
+    .tabs .indicator {
+      background-color: #42a5f5; /* Голубой цвет индикатора */
+      height: 3px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Навигация (как в главной странице) -->
+  <header>
+    <nav class="indigo">
+      <div class="nav-wrapper">
+        <a href="/" class="brand-logo left">EventManager</a>
+        <ul class="right">
+          <li>
+            <a class="dropdown-trigger" href="#!" data-target="user_dropdown">
+              <i class="material-icons">account_circle</i>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Выпадающее меню -->
+  <ul id="user_dropdown" class="dropdown-content">
+    <li><a href="#!" id="mainLink">Главная</a></li>
+    <li><a href="#!" id="logoutLink">Выйти</a></li>
+  </ul>
+
+  <!-- Основной контент -->
+  <main>
+    <div class="container profile-container">
+      <div class="row">
+        <div class="col s12 m8 offset-m2">
+          <div class="profile-card">
+            <div class="profile-header">
+              <h4>Мой профиль</h4>
+            </div>
+            <div class="row">
+              <div class="col s12">
+                <p><strong>Имя:</strong> <span id="user-name">{{ user.user.fio }}</span></p>
+                <p><strong>Email:</strong> <span id="user-email">{{ user.user.email }}</span></p>
+                <p><strong>Логин:</strong> <span id="user-login">{{ user.user.login }}</span></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Блок с активными путешествиями -->
+          <div class="profile-card">
+            <div class="row">
+              <div class="col s12">
+                <ul class="tabs">
+                  <li class="tab col s6"><a class="active" href="#active-events">Активные</a></li>
+                  <li class="tab col s6"><a href="#completed-events">Архив</a></li>
+                </ul>
+              </div>
+              
+              <!-- Активные мероприятия -->
+              <div id="active-events" class="col s12">
+                {% if active_sessions %}
+                  {% for session in active_sessions %}
+                    <div class="card hoverable">
+                      <div class="card-content">
+                        <!-- Основная информация о маршруте -->
+                        <div class="section" style="margin-top: 15px;">
+                          <h6><i class="material-icons tiny">group</i> Участники:</h6>
+                          {% if session.users %}
+                            <ul class="collection">
+                              {% for user in session.users %}
+                                {% if user.user_id == current_user_id %}Вы{% else %}{{ user.fio }}{% endif %}{% if not loop.last %}, {% endif %}
+                              {% endfor %}
+                            </ul>
+                          {% else %}
+                            <p>Нет участников</p>
+                          {% endif %}
+                        </div>
+                        <div class="row valign-wrapper">
+                          <div class="col s9">
+                            <span class="card-title">
+                              {{ session.destination_venue }}
+                            </span>
+                            <p>
+                              <i class="material-icons tiny">date_range</i>
+                              {{ session.start_time.strftime('%d.%m.%Y') }} - {{ session.end_time.strftime('%d.%m.%Y') }}
+                            </p>
+                            <p>
+                              <i class="material-icons tiny">directions_transit</i>
+                              {{ session.transport }}
+                            </p>
+                            <p>
+                              <i class="material-icons tiny">attach_money</i>
+                              Стоимость: {{ session.cost }} руб.
+                            </p>
+                          </div>
+                          <div class="col s3 right-align">
+                            <a href="/session/edit/{{ session.session_id }}" 
+                              class="btn-floating btn-small waves-effect waves-light blue"
+                              title="Редактировать"
+                              style="margin-right: 5px;">
+                              <i class="material-icons">edit</i>
+                            </a>
+                            
+                            <!-- Кнопка завершения -->
+                            <form action="/event/complete/{{ session.event_id }}" 
+                                  method="post" 
+                                  style="display: inline-block;">
+                              <button type="submit" 
+                                      class="btn-floating btn-small waves-effect waves-light green"
+                                      title="Завершить мероприятие">
+                                <i class="material-icons">check</i>
+                              </button>
+                            </form>
+                          </div>
+                        </div>
+                
+                        <!-- Раздел с Активностими -->
+                        <div class="section" style="margin-top: 15px;">
+                          <h6><i class="material-icons tiny">local_activity</i> Активности:</h6>
+                          <div class="row">
+                            {% for act in session.activities %}
+                            <div class="col s12 m6">
+                              <div class="card-panel grey lighten-4" style="padding: 10px; margin: 5px 0;">
+                                <strong>{{ act.activity_type }}</strong>
+                                <p>
+                                  <i class="material-icons tiny">location_on</i> 
+                                  {{ act.venue.name }}, {{ act.address }}
+                                </p>
+                                <p>
+                                  <i class="material-icons tiny">access_time</i> 
+                                  {{ act.activity_time.strftime('%d.%m.%Y %H:%M') }} ({{ act.duration }})
+                                </p>
+                              </div>
+                            </div>
+                            {% else %}
+                            <div class="col s12">
+                              <p>Нет запланированных активностей</p>
+                            </div>
+                            {% endfor %}
+                          </div>
+                        </div>
+                
+                        <!-- Раздел с Размещением -->
+                        <div class="section" style="margin-top: 15px;">
+                          <h6><i class="material-icons tiny">hotel</i> Размещение:</h6>
+                          <div class="row">
+                            {% for lod in session.lodgings %}
+                            <div class="col s12 m6">
+                              <div class="card-panel grey lighten-4" style="padding: 10px; margin: 5px 0;">
+                                <strong>{{ lod.name }}</strong> ({{ lod.type }})
+                                <p>
+                                  <i class="material-icons tiny">star</i> 
+                                  Рейтинг: {{ lod.rating }}/5
+                                </p>
+                                <p>
+                                  <i class="material-icons tiny">location_on</i> 
+                                  {{ lod.venue.name }}, {{ lod.address }}
+                                </p>
+                                <p>
+                                  <i class="material-icons tiny">date_range</i> 
+                                  {{ lod.check_in.strftime('%d.%m.%Y') }} - {{ lod.check_out.strftime('%d.%m.%Y') }}
+                                </p>
+                                <p>
+                                  <i class="material-icons tiny">attach_money</i> 
+                                  {{ lod.price }} руб.
+                                </p>
+                              </div>
+                            </div>
+                            {% else %}
+                            <div class="col s12">
+                              <p>Размещение не забронировано</p>
+                            </div>
+                            {% endfor %}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  {% endfor %}
+                {% else %}
+                  <div class="center-align" style="padding: 40px 0">
+                    <i class="material-icons large grey-text">airplanemode_inactive</i>
+                    <h5>У вас нет активных мероприятий</h5>
+                    <p>Начните планировать свое следующее мероприятие!</p>
+                    <a href="/session/new" class="btn waves-effect waves-light indigo">
+                      <i class="material-icons left">add</i>
+                      Создать мероприятие
+                    </a>
+                  </div>
+                {% endif %}
+              </div>
+              <!-- Архив мероприятий -->
+              <div id="completed-events" class="col s12">
+                {% if completed_sessions %}
+                  <div class="row">
+                    {% for session in completed_sessions %}
+                      <div class="col s12">
+                        <div class="card hoverable">
+                          <div class="card-content">
+                            <div class="section" style="margin-top: 15px;">
+                              <h6><i class="material-icons tiny">group</i> Участники:</h6>
+                              {% if session.users %}
+                                <ul class="collection">
+                                  {% for user in session.users %}
+                                    {% if user.user_id == current_user_id %}Вы{% else %}{{ user.fio }}{% endif %}{% if not loop.last %}, {% endif %}
+                                  {% endfor %}
+                                </ul>
+                              {% else %}
+                                <p>Нет участников</p>
+                              {% endif %}
+                            </div>
+                            <span class="card-title">
+                              <i class="material-icons small green-text">check_circle</i>
+                              {{ session.destination_venue }}
+                            </span>
+                            <p><i class="material-icons tiny">date_range</i> {{ session.start_time.strftime('%d.%m.%Y') }}</p>
+                            <p><i class="material-icons tiny">directions_transit</i> {{ session.transport }}</p>
+                            <p><i class="material-icons tiny">attach_money</i>Стоимость: {{ session.cost }} руб.</p>
+                            <!-- Раздел с Активностими -->
+                            <div class="section" style="margin-top: 15px;">
+                              <h6><i class="material-icons tiny">local_activity</i> Активности:</h6>
+                              <div class="row">
+                                {% for act in session.activities %}
+                                <div class="col s12 m6">
+                                  <div class="card-panel grey lighten-4" style="padding: 10px; margin: 5px 0;">
+                                    <strong>{{ act.activity_type }}</strong>
+                                    <p>
+                                      <i class="material-icons tiny">location_on</i> 
+                                      {{ act.venue.name }}, {{ act.address }}
+                                    </p>
+                                    <p>
+                                      <i class="material-icons tiny">access_time</i> 
+                                      {{ act.activity_time.strftime('%d.%m.%Y %H:%M') }} ({{ act.duration }})
+                                    </p>
+                                  </div>
+                                </div>
+                                {% else %}
+                                <div class="col s12">
+                                  <p>Нет запланированных активностей</p>
+                                </div>
+                                {% endfor %}
+                              </div>
+                            </div>
+                    
+                            <!-- Раздел с Размещением -->
+                            <div class="section" style="margin-top: 15px;">
+                              <h6><i class="material-icons tiny">hotel</i> Размещение:</h6>
+                              <div class="row">
+                                {% for lod in session.lodgings %}
+                                <div class="col s12 m6">
+                                  <div class="card-panel grey lighten-4" style="padding: 10px; margin: 5px 0;">
+                                    <strong>{{ lod.name }}</strong> ({{ lod.type }})
+                                    <p>
+                                      <i class="material-icons tiny">star</i> 
+                                      Рейтинг: {{ lod.rating }}/5
+                                    </p>
+                                    <p>
+                                      <i class="material-icons tiny">location_on</i> 
+                                      {{ lod.venue.name }}, {{ lod.address }}
+                                    </p>
+                                    <p>
+                                      <i class="material-icons tiny">date_range</i> 
+                                      {{ lod.check_in.strftime('%d.%m.%Y') }} - {{ lod.check_out.strftime('%d.%m.%Y') }}
+                                    </p>
+                                    <p>
+                                      <i class="material-icons tiny">attach_money</i> 
+                                      {{ lod.price }} руб.
+                                    </p>
+                                  </div>
+                                </div>
+                                {% else %}
+                                <div class="col s12">
+                                  <p>Размещение не забронировано</p>
+                                </div>
+                                {% endfor %}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% else %}
+                  <div class="no-content">
+                    <i class="material-icons large">inbox</i>
+                    <h5>Архив пуст</h5>
+                    <p>Здесь будут завершённые мероприятия</p>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Инициализация dropdown
+      M.Dropdown.init(document.querySelectorAll('.dropdown-trigger'));
+      M.Tabs.init(document.querySelectorAll('.tabs'));
+      // Обработчик выхода
+      $('#logoutLink').on('click', function() {
+        localStorage.removeItem('auth_token');
+        localStorage.removeItem('user_id');
+        sessionStorage.removeItem('auth_token');
+        sessionStorage.removeItem('user_id');
+        window.location.href = '/';
+      });
+      $('#mainLink').on('click', function() {
+        window.location.href = '/profile';
+      });
+    });
+  </script>
+</body>
+</html>

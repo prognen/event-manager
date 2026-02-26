@@ -1,0 +1,169 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EventManager - Главная</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+
+  <style>
+    /* Основной контент */
+    main {
+      margin-top: 90px;
+      min-height: calc(100vh - 90px);
+      display: flex;
+      align-items: center;
+    }
+
+    header {
+      position: fixed;
+      width: 100%;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+
+    .brand-logo {
+      font-size: 24px; 
+      font-weight: bold; 
+      color: white;
+      margin-left: 20px;
+      font-family: 'Arial', sans-serif;
+    }
+
+    .action-container {
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .action-card {
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14), 
+                  0 3px 1px -2px rgba(0,0,0,0.12), 
+                  0 1px 5px 0 rgba(0,0,0,0.2);
+      transition: transform 0.3s;
+    }
+
+    .action-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .action-card h3 {
+      margin-top: 0;
+      color: #3f51b5;
+    }
+
+    .action-card a {
+      display: block;
+      margin-top: 15px;
+    }
+
+    .recommendations {
+      background-color: #e3f2fd;
+    }
+
+    .tours {
+      background-color: #e8f5e9;
+    }
+
+    .create {
+      background-color: #fff8e1;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Навигация -->
+  <header>
+    <nav class="indigo">
+      <div class="nav-wrapper">
+        <a href="/" class="brand-logo left">EventManager</a>
+        <ul class="right">
+          <li>
+            <a class="dropdown-trigger" href="#!" data-target="user_dropdown">
+              <i class="material-icons">account_circle</i>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Выпадающее меню -->
+  <ul id="user_dropdown" class="dropdown-content">
+    <li><a href="#!" id="profileLink">Профиль</a></li>
+    <li><a href="#!" id="logoutLink">Выйти</a></li>
+  </ul>
+
+  <!-- Основной контент -->
+  <main>
+    <div class="container">
+      <div class="action-container">
+        <!-- Карточка рекомендаций -->
+        <div class="action-card recommendations">
+          <h3><i class="material-icons left">recommend</i> Посмотреть рекомендации</h3>
+          <p>Представляем наиболее популярные программы</p>
+          <a href="/recommended" class="waves-effect waves-light btn indigo">
+            Перейти
+            <i class="material-icons right">chevron_right</i>
+          </a>
+        </div>
+
+        <!-- Карточка авторских туров -->
+        <div class="action-card tours">
+          <h3><i class="material-icons left">star</i> Официальные сессии</h3>
+          <p>Уникальные программы от опытных путешественников</p>
+          <a href="/tours" class="waves-effect waves-light btn green">
+            Смотреть
+            <i class="material-icons right">chevron_right</i>
+          </a>
+        </div>
+
+        <!-- Карточка создания Мероприятия -->
+        <div class="action-card create">
+          <h3><i class="material-icons left">add</i> Создать новое мероприятие</h3>
+          <p>Спланируйте своё идеальное мероприятие</p>
+          <a href="/session/new" class="waves-effect waves-light btn orange">
+            Начать
+            <i class="material-icons right">chevron_right</i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Инициализация компонентов Materialize
+      M.Dropdown.init(document.querySelectorAll('.dropdown-trigger'), {
+          constrainWidth: false,
+          coverTrigger: false
+      });
+      $('#logoutLink').on('click', function () {
+          localStorage.removeItem('auth_token'); 
+          localStorage.removeItem('user_id');
+          sessionStorage.removeItem('auth_token');
+          sessionStorage.removeItem('user_id');
+
+          window.location.replace('/');
+      });
+      $('#profileLink').on('click', function() {
+          const userId = localStorage.getItem('user_id') || sessionStorage.getItem('user_id');
+          if (userId) {
+          window.location.href = `/profile_user/${userId}`;
+          } else {
+          M.toast({html: 'Не удалось получить ID пользователя', classes: 'red'});
+          }
+      });
+      
+     });
+  </script>
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TravelGuide - Вход</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+
+  <style>
+    /* Основной контент */
+    main {
+      margin-top: 90px; /* Отступ сверху, чтобы избежать перекрытия шапкой */
+      min-height: calc(100vh - 90px);
+      display: flex;
+      align-items: center;
+    }
+
+    header {
+      position: fixed;
+      width: 100%;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+
+    .brand-logo {
+      font-size: 24px; 
+      font-weight: bold; 
+      color: white;
+      margin-left: 20px;
+      font-family: 'Arial', sans-serif;
+    }
+
+    .auth-container {
+      width: 100%;
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 2px 0 rgba(0,0,0,0.14), 
+                  0 3px 1px -2px rgba(0,0,0,0.12), 
+                  0 1px 5px 0 rgba(0,0,0,0.2);
+    }
+
+    .auth-container h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #3f51b5;
+    }
+
+    .btn {
+      width: 100%;
+      margin-top: 20px;
+      background-color: #3f51b5;
+    }
+
+    .btn:hover {
+      background-color: #303f9f;
+    }
+
+    .auth-link {
+      text-align: center;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Навигация -->
+  <header>
+    <nav class="indigo">
+      <div class="nav-wrapper">
+        <a href="/" class="brand-logo left">TravelGuide</a>
+        <ul class="right">
+          <li>
+            <a class="dropdown-trigger" href="#!" data-target="user_dropdown">
+              <i class="material-icons">account_circle</i>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Выпадающее меню -->
+  <ul id="user_dropdown" class="dropdown-content">
+    <li><a href="/login">Войти</a></li>
+    <li><a href="/register">Регистрация</a></li>
+  </ul>
+
+  <!-- Основной контент -->
+  <main>
+    <div class="container">
+      <div class="auth-container">
+        <h2>Вход в систему</h2>
+        <form id="loginForm">
+          <div class="input-field">
+            <i class="material-icons prefix">login</i>
+            <input id="login" type="text" name="login" required>
+            <label for="login">Логин</label>
+          </div>
+          <div class="input-field">
+            <i class="material-icons prefix">lock</i>
+            <input id="password" type="password" name="password" required>
+            <label for="password">Пароль</label>
+          </div>
+          <button class="btn waves-effect waves-light" type="submit">
+            Войти
+            <i class="material-icons right">send</i>
+          </button>
+        </form>
+        <div class="auth-link">
+          <p>Нет аккаунта? <a href="/register">Зарегистрируйтесь</a></p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+    // Инициализация компонентов Materialize
+    M.Dropdown.init(document.querySelectorAll('.dropdown-trigger'), {
+      constrainWidth: false,
+      coverTrigger: false
+    });
+    
+    // Обработка формы входа
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const login = document.getElementById('login').value;
+      const password = document.getElementById('password').value;
+      
+      if (!login || !password) {
+        M.toast({html: 'Пожалуйста, введите логин и пароль', classes: 'red'});
+        return;
+      }
+      
+      try {
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            login: login,
+            password: password
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.message || 'Ошибка входа');
+        }
+        
+        localStorage.setItem('auth_token', data.access_token);
+        localStorage.setItem('user_id', data.user_id);
+        if (data.is_admin) {
+          window.location.href = '/route.html';
+        } else {
+          window.location.href = '/profile';
+        }
+        
+      } catch (error) {
+        console.error('Ошибка входа:', error);
+        M.toast({html: error.message, classes: 'red'});
+      }
+    });
+  });
+  </script>
+</body>
+</html>

@@ -1,0 +1,436 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EventManager - Туры</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <style>
+    body {
+      background-color: #f5f5f5;
+    }
+    header {
+      position: fixed;
+      width: 100%;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+    .brand-logo {
+      font-size: 24px;
+      font-weight: bold;
+      color: white;
+      margin-left: 20px;
+    }
+    .container {
+      margin-top: 100px;
+    }
+    .route-card {
+      border-radius: 8px;
+      overflow: hidden;
+      background: white;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+    .card-content {
+      padding: 20px;
+    }
+    .card-action {
+      border-top: 1px solid #eee;
+      padding: 15px 20px;
+      background-color: #f9f9f9;
+    }
+    .route-title {
+      font-size: 1.4rem;
+      font-weight: 500;
+      color: #3a3a3a;
+    }
+    .route-info {
+      margin: 10px 0;
+      color: #666;
+      display: flex;
+      align-items: center;
+    }
+    .route-info i {
+      margin-right: 8px;
+      color: #42a5f5;
+    }
+    .price-tag {
+      font-weight: 500;
+      color: #2e7d32;
+    }
+    .status-chip {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      margin-top: 10px;
+    }
+    .status-active {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+    }
+    .status-draft {
+      background-color: #fff8e1;
+      color: #ff8f00;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 60px 0;
+      color: #777;
+    }
+    .empty-state i {
+      font-size: 4rem;
+      color: #bdbdbd;
+      margin-bottom: 20px;
+    }
+    .btn-custom {
+      background-color: #3a7bd5;
+      border-radius: 5px;
+      text-transform: none;
+    }
+    .section-title {
+      font-size: 1.8rem;
+      font-weight: 500;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #42a5f5;
+      padding-bottom: 10px;
+      color: #333;
+    }
+    .modal {
+      max-height: 90%; 
+      overflow: hidden;
+    }
+
+    .modal .collection {
+      margin: 0;
+    }
+    .modal .collection-item {
+      padding: 15px 20px;
+      border-bottom: 1px solid #eee;
+    }
+    .ent-price {
+      float: right;
+      font-weight: bold;
+      color: #2e7d32;
+    }
+    .section-header {
+      font-size: 1.2rem;
+      margin: 20px 0 10px;
+      color: #42a5f5;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 5px;
+    }
+
+    .detail-item {
+      margin-bottom: 8px;
+      display: flex;
+    }
+
+    .detail-label {
+      font-weight: 500;
+      min-width: 120px;
+      color: #555;
+    }
+
+    .rating-stars {
+      color: #ffc107;
+      font-size: 1.1rem;
+    }
+    .modal .tabs {
+      margin-top: 20px;
+    }
+    .modal .tab-content {
+      padding: 20px 0;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .modal .tab-content .collection {
+      margin-top: 0;
+    }
+
+    .tab-content-scrollable {
+      max-height: 350px;
+      overflow-y: auto;
+      padding: 10px 0;
+    }
+
+    /* Стиль для скроллбара */
+    .tab-content-scrollable::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .tab-content-scrollable::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+
+    .tab-content-scrollable::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 4px;
+    }
+
+    .tab-content-scrollable::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Навигация -->
+  <header>
+    <nav class="indigo">
+      <div class="nav-wrapper">
+        <a href="/" class="brand-logo left">EventManager</a>
+        <ul class="right">
+          <li>
+            <a class="dropdown-trigger" href="#!" data-target="user_dropdown">
+              <i class="material-icons">account_circle</i>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+  </header>
+
+  <!-- Выпадающее меню -->
+  <ul id="user_dropdown" class="dropdown-content">
+    <li><a href="/profile">Главная</a></li>
+    <li><a href="#!" id="profileLink">Профиль</a></li>
+    <li><a href="#" id="logoutLink">Выйти</a></li>
+  </ul>
+
+  <main>
+    <div class="container">
+      <h4 class="section-title">Официальные программы</h4>
+      <div class="row">
+        {% for session in sessions %}
+          <div class="col s12 m6 l4">
+            <div class="card route-card hoverable">
+              <div class="card-content">
+                <span class="route-title">{{ session.from_venue }} → {{ session.to_venue }}</span>
+                
+                <div class="route-info">
+                  <i class="material-icons">event</i>
+                  <span>{{ session.start_time }} – {{ session.end_time }}</span>
+                </div>
+                
+                <div class="route-info">
+                  <i class="material-icons">directions</i>
+                  <span>{{ session.transport }}</span>
+                </div>
+                
+                <div class="route-info">
+                  <i class="material-icons">attach_money</i>
+                  <span class="price-tag">{{ session.cost }} руб.</span>
+                </div>
+              </div>
+              
+              <div class="card-action">
+                <a href="#modal-details-{{ session.session_id }}" class="btn btn-custom waves-effect waves-light modal-trigger">
+                  Подробнее
+                </a>
+                <a href="#" class="btn waves-effect waves-light join-trip" data-session-id="{{ session.session_id }}" data-user-id="{{ current_user }}">
+                  Хочу с вами
+                  </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Модальное окно с деталями -->
+          <div id="modal-details-{{ session.session_id }}" class="modal">
+            <div class="modal-content">
+              <div class="row">
+                <div class="col s12">
+                  <ul class="tabs">
+                    <li class="tab col s6"><a class="active" href="#tab-accommodations-{{ session.session_id }}">Размещения</a></li>
+                    <li class="tab col s6"><a href="#tab-entertainments-{{ session.session_id }}">Активности</a></li>
+                  </ul>
+                </div>
+                
+                
+                <!-- Вкладка с размещениями -->
+                <div id="tab-accommodations-{{ session.session_id }}" class="col s12 tab-content tab-content-scrollable">
+                  {% if session.lodgings and session.lodgings|length > 0 %}
+                    <div class="collection">
+                      {% for acc in session.lodgings %}
+                        <div class="collection-item">
+                          <div class="detail-item">
+                            <span class="detail-label">Тип:</span>
+                            <span>{{ lod.type }}</span>
+                          </div>
+                          <div class="detail-item">
+                            <span class="detail-label">Название:</span>
+                            <span>{{ lod.name }}</span>
+                          </div>
+                          <div class="detail-item">
+                            <span class="detail-label">Адрес:</span>
+                            <span>{{ lod.address }}</span>
+                          </div>
+                          {% if lod.check_in and lod.check_out %}
+                          <div class="detail-item">
+                            <span class="detail-label">Даты:</span>
+                            <span>{{ lod.check_in }} - {{ lod.check_out }}</span>
+                          </div>
+                          {% endif %}
+                          <div class="detail-item">
+                            <span class="detail-label">Цена:</span>
+                            <span>{{ lod.price }} руб.</span>
+                          </div>
+                          <div class="detail-item">
+                            <span class="detail-label">Рейтинг:</span>
+                            <span class="rating-stars">
+                              {% for i in range(lod.rating|int) %}★{% endfor %}
+                            </span>
+                          </div>
+                        </div>
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    <div class="card-panel yellow lighten-4">
+                      Нет информации о размещении
+                    </div>
+                  {% endif %}
+                </div>
+                
+                <!-- Вкладка с развлечениями -->
+                <div id="tab-entertainments-{{ session.session_id }}" class="col s12 tab-content tab-content-scrollable">
+                  {% if session.activities and session.activities|length > 0 %}
+                    <div class="collection">
+                      {% for ent in session.activities %}
+                        <div class="collection-item">
+                          <div class="detail-item">
+                            <span class="detail-label">Тип:</span>
+                            <span>{{ act.activity_type }}</span>
+                          </div>
+                          <div class="detail-item">
+                            <span class="detail-label">Адрес:</span>
+                            <span>{{ act.address }}</span>
+                          </div>
+                          <div class="detail-item">
+                            <span class="detail-label">Дата:</span>
+                            <span>{{ act.activity_time }}</span>
+                          </div>
+                          <div class="detail-item">
+                            <span class="detail-label">Длительность:</span>
+                            <span>{{ act.duration }}</span>
+                          </div>
+                        </div>
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    <p>Нет информации об активностях</p>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <a href="#!" class="modal-close waves-effect waves-green btn-flat">Закрыть</a>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </main>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+  try {
+    // Инициализация выпадающего меню
+    M.Dropdown.init(document.querySelectorAll('.dropdown-trigger'), {
+      coverTrigger: false
+    });
+    
+    // Инициализация модальных окон с callback
+    var modals = document.querySelectorAll('.modal');
+    modals.forEach(function(modal) {
+      var instance = M.Modal.init(modal, {
+        opacity: 0.5,
+        inDuration: 250,
+        outDuration: 200,
+        onOpenEnd: function() {
+          // Инициализация табов после открытия модального окна
+          var tabs = modal.querySelectorAll('.tabs');
+          M.Tabs.init(tabs, {
+            swipeable: true
+          });
+        }
+      });
+    });
+    
+    // Обработка выхода
+    document.getElementById('logoutLink')?.addEventListener('click', function(e) {
+      e.preventDefault();
+      ['auth_token', 'user_id'].forEach(key => {
+        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
+      });
+      window.location.href = '/';
+    });
+    
+    console.log('Инициализация компонентов завершена');
+  } catch (e) {
+    console.error('Ошибка инициализации:', e);
+  }
+});
+document.addEventListener('DOMContentLoaded', function() {
+  // Обработчик кнопки "Хочу с вами"
+  document.querySelectorAll('.join-trip').forEach(btn => {
+    btn.addEventListener('click', async function(e) {
+      e.preventDefault();
+      
+      const sessionId = this.getAttribute('data-session-id');
+      const userId = localStorage.getItem('user_id'); // Или из sessionStorage
+    
+      if (!userId) {
+        M.toast({html: 'Пожалуйста, войдите в систему'});
+        window.location.href = '/login';
+        return;
+      }
+
+      try {
+        const response = await fetch(`/sessions/${routeId}/join`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}` 
+          },
+          body: JSON.stringify({
+            user_id: userId
+          })
+    });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+          M.toast({html: 'Вы успешно присоединились к сессии!'});
+          setTimeout(() => window.location.reload(), 1500);
+        } else {
+          M.toast({html: 'Ошибка: ' + (result.message || 'Не удалось присоединиться')});
+        }
+      } catch (error) {
+        console.error('Ошибка:', error);
+        M.toast({html: 'Произошла ошибка при соединении с сервером'});
+      }
+    });
+  });
+  document.getElementById('profileLink')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    const userId = localStorage.getItem('user_id'); // Или из sessionStorage
+    
+      if (!userId) {
+        M.toast({html: 'Пожалуйста, войдите в систему'});
+        window.location.href = '/login';
+        return;
+      }
+    window.location.href = `/profile_user/${userId}`;
+  });
+});
+    </script>
+</body>
+</html>
+
