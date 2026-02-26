@@ -35,7 +35,7 @@ class TestMVPEventManagementFlow:
         user_login = f"mvp_test_{uid}"
         user_password = "Test@Pass123"
         user_email = f"mvp_test_{uid}@test.com"
-        user_phone = f"7926{uuid.uuid4().int % 10_000_000:07d}"
+        user_phone = f"8926{uuid.uuid4().int % 10_000_000:07d}"
 
         async with httpx.AsyncClient(
             base_url=BASE_URL, follow_redirects=True, timeout=30.0
