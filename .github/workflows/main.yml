@@ -393,11 +393,16 @@ jobs:
     if: always()
     
     steps:
-      - name: Checkout code + history
+      - name: Checkout code
         uses: actions/checkout@v4
         with:
-          ref: gh-pages
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Restore Allure history from gh-pages
+        continue-on-error: true
+        run: |
+          git fetch origin gh-pages --depth=1 2>/dev/null || echo "gh-pages branch does not exist yet (first run)"
+          git checkout FETCH_HEAD -- history 2>/dev/null || echo "No history to restore"
 
       - name: Install Allure
         run: |
@@ -476,7 +481,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: allure-report
           keep_files: true
-          force_orphan: false
 
 
   # test-metrics:
