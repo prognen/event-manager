@@ -197,6 +197,7 @@ async def get_service_locator() -> ServiceLocator:
         )
         _pg_session_factory = async_sessionmaker(_pg_engine, expire_on_commit=False)
 
+    assert _pg_session_factory is not None
     session: AsyncSession = _pg_session_factory()
 
     venue_repo: IVenueRepository = VenueRepository(session)

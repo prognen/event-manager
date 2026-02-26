@@ -1,3 +1,4 @@
+import uuid
 import pytest
 import requests
 from pytest_bdd import scenarios, given, when, then
@@ -18,7 +19,7 @@ scenarios("../features/password_rotation.feature")
 # ------------------------------
 @pytest.fixture
 def password_user():
-    login = "techuser_oldpass"
+    login = f"techuser_oldpass_{uuid.uuid4().hex[:8]}"
     old_password = BDD_PASS
     email = fake.email()
     phone = "89259930123"
@@ -36,6 +37,7 @@ def password_user():
 
     # Регистрация пользователя
     resp = requests.post(f"{BASE_URL}/api/register", json=user.model_dump())
+    resp.raise_for_status()
     data = resp.json()
 
     user_data = {

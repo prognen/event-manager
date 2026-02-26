@@ -1,3 +1,4 @@
+import uuid
 import pytest
 import requests
 from pytest_bdd import scenarios, given, when, then
@@ -16,7 +17,7 @@ BASE_URL = "http://localhost:8000"
 
 @pytest.fixture
 def test_user():
-    login = "techuser_limit"
+    login = f"techuser_limit_{uuid.uuid4().hex[:8]}"
     password = BDD_PASS
     email = fake.email()
     phone = "80261940112"
@@ -34,6 +35,7 @@ def test_user():
 
     # Регистрация пользователя
     resp = requests.post(f"{BASE_URL}/api/register", json=user.model_dump())
+    resp.raise_for_status()
     data = resp.json()
     user_data = {
         "login": login,

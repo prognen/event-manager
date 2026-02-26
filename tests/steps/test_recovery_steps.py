@@ -1,3 +1,4 @@
+import uuid
 import pytest
 from pytest_bdd import scenarios, given, when, then
 import requests
@@ -19,7 +20,7 @@ BASE_URL = "http://localhost:8000"
 # ------------------------------
 @pytest.fixture
 def recover_user():
-    login = "techuser_block"
+    login = f"techuser_block_{uuid.uuid4().hex[:8]}"
     password = BDD_PASS
     email = fake.email()
     phone = "89255930166"
@@ -36,6 +37,7 @@ def recover_user():
     )
 
     resp = requests.post(f"{BASE_URL}/api/register", json=user.model_dump())
+    resp.raise_for_status()
     data = resp.json()
     user_data = {
         "login": login,

@@ -1,4 +1,5 @@
 import re
+import uuid
 import base64
 import pytest
 import requests
@@ -20,7 +21,7 @@ BDD_PASS = os.environ.get("BDD_USER_PASS", "Test@Pass123")
 # ------------------------------
 @pytest.fixture
 def test_user_2fa():
-    login = "techuser_2fa"
+    login = f"techuser_2fa_{uuid.uuid4().hex[:8]}"
     password = BDD_PASS
     email = fake.email()
     phone = "89261930112"
