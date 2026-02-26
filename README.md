@@ -138,3 +138,73 @@ addopts = "--tb=short -p randomly"   # краткие трейсбеки + сл�
 ```bash
 poetry run pytest tests/integration -v -m integration
 ```
+
+### Запуск интеграционных тестов локально (через Docker)
+
+```bash
+# Поднять тестовую БД и запустить интеграционные тесты
+docker compose run --rm integration-tests
+
+# Или указать конкретный тест
+docker compose run --rm integration-tests pytest tests/integration/venue_serv/ -v
+```
+
+### Запуск E2E-тестов
+
+```bash
+# Поднять всё окружение и запустить E2E
+docker compose up -d db app mailhog
+docker compose run --rm e2e-tests
+
+# Для захвата сетевого трафика (профиль capture)
+docker compose --profile capture up -d tcpdump
+# После завершения тестов .pcap-файл будет в папке captures/
+```
+
+### Имитация MVP-сценария с помощью curl (для демонстрации E2E)
+
+Ниже приведены те же шаги, что выполняет `test_mvp_event_flow_e2e.py`, но вручную через `curl`.
+
+```bash
+BASE=http://localhost:8000
+
+# Шаг 1: Регистрация пользователя
+curl -s -X POST $BASE/api/register \
+  -H "Content-Type: application/json" \
+  -d '{"fio":"Иван Иванов","number_passport":"1234567890","phone_number":"79261234567","email":"ivan@test.com","login":"demo_user1","password":"Test@Pass123","is_admin":false}'
+
+# Шаг 2: Вход в систему
+TOKEN=$(curl -s -X POST $BASE/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"login":"demo_user1","password":"Test@Pass123"}' | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+
+# Шаг 3: Просмотр площадок
+curl -s $BASE/venue.html | grep -o 'Москва\|Воронеж'
+
+# Шаг 4: Создание мероприятия с маршрутом (Москва → Воронеж, Автомобиль)
+USER_ID=$(curl -s $BASE/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"login":"demo_user1","password":"Test@Pass123"}' | python3 -c "import sys,json; print(json.load(sys.stdin)['user_id'])")
+
+curl -s -X POST $BASE/session/new \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d "{\"from_venue\":\"1\",\"to_venue\":\"2\",\"transport\":\"Автомобиль\",\"start_date\":\"05.05.2026\",\"end_date\":\"08.05.2026\",\"user_id\":\"$USER_ID\",\"activities[]\":[\"1\"],\"lodgings[]\":[\"1\"]}"
+
+# Шаг 5: Проверка мероприятия
+curl -s $BASE/event.html | grep -o 'Активное'
+```
+
+### Захват трафика с помощью tcpdump
+
+```bash
+# Запуск захвата трафика между приложением и e2e-тестами
+docker compose --profile capture up -d tcpdump
+
+# После прогона тестов остановить захват
+docker compose stop tcpdump
+
+# Файл captures/docker_traffic.pcap открывается в Wireshark
+# или просматривается командой:
+tcpdump -r captures/docker_traffic.pcap -nn -q
+```

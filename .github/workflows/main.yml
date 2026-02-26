@@ -250,11 +250,12 @@ jobs:
           --health-interval=5s
           --health-timeout=5s
           --health-retries=5
-      mailhog:                           
+      mailhog:
         image: mailhog/mailhog:v1.0.1
         ports:
-          - 1025:1025                     # SMTP порт
-          - 8025:8025                     # Веб-интерфейс
+          - 1025:1025
+          - 8025:8025
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -271,8 +272,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          poetry install --with dev
-          poetry run pip install allure-pytest pytest-bdd
+          poetry install --with dev --with e2e
+          poetry run pip install allure-pytest pytest-bdd requests
           poetry run pip install opentelemetry-api opentelemetry-sdk \
           opentelemetry-instrumentation-fastapi opentelemetry-instrumentation-requests \
           opentelemetry-exporter-otlp opentelemetry.instrumentation.httpx
@@ -281,20 +282,48 @@ jobs:
         run: |
           mkdir -p allure-results/e2e
           mkdir -p test-reports
+          mkdir -p tests/e2e
 
+      # ------------------------------------------------------------------
+      # Пропускаем E2E-тесты, если integration-тесты не прошли.
+      # Генерируем skipped-результат для отчёта.
+      # ------------------------------------------------------------------
+      - name: Run skipped e2e test (if integration tests failed)
+        if: ${{ needs.integration-tests.result != 'success' }}
+        run: |
+          cat <<'EOF' > tests/e2e/skipped_e2e.py
+          import pytest
+
+          @pytest.mark.skip(reason='Integration tests failed, e2e skipped')
+          def test_skipped():
+              pass
+          EOF
+          poetry run pytest tests/e2e/skipped_e2e.py -v \
+            --alluredir=allure-results/e2e \
+            --junitxml=test-reports/e2e-tests.xml
+        env:
+          DATABASE_URL: postgresql+asyncpg://egor:egor@localhost:5432/mydb
+          TEST_ENV: e2e
+
+      # ------------------------------------------------------------------
+      # Запускаем реальные E2E-тесты только если integration прошли.
+      # ------------------------------------------------------------------
       - name: Initialize test database
+        if: ${{ needs.integration-tests.result == 'success' }}
         run: |
           echo "Running DB init scripts..."
           for script in db-init/*.sql; do
-            psql postgresql://egor:egor@localhost:5432/mydb -f "$script"
+            PGPASSWORD=egor psql -h localhost -U egor -d mydb -f "$script"
           done
 
       - name: Run FastAPI app in background
+        if: ${{ needs.integration-tests.result == 'success' }}
         run: |
           nohup poetry run uvicorn src.main:app --host 0.0.0.0 --port 8000 &
           sleep 5
 
       - name: Run e2e tests & BDD tests
+        if: ${{ needs.integration-tests.result == 'success' }}
         run: |
           poetry run pytest tests/e2e/ tests/steps/ -v \
             --alluredir=allure-results/e2e \
@@ -302,19 +331,51 @@ jobs:
         env:
           DATABASE_URL: postgresql+asyncpg://egor:egor@localhost:5432/mydb
           BASE_URL: http://localhost:8000
-          MAIL_HOST: mailhog
+          MAIL_HOST: localhost
           MAIL_PORT: 1025
           TEST_ENV: e2e
           BDD_USER_PASS: ${{ secrets.BDD_USER_PASS }}
-      - name: Check MailHog messages
+
+      # ------------------------------------------------------------------
+      # Откат хранилища: удаление тестовых данных из БД (всегда).
+      # Требование 7: если свалился e2e этап — откатить хранилище.
+      # ------------------------------------------------------------------
+      - name: Rollback e2e test data in database
+        if: always()
+        run: |
+          echo "Rolling back e2e test data..."
+          PGPASSWORD=egor psql -h localhost -U egor -d mydb -c "
+            DELETE FROM event_db.users_event
+            WHERE users_id IN (
+              SELECT id FROM event_db.users
+              WHERE login LIKE 'mvp_test_%'
+                 OR login LIKE 'techuser_%'
+            );
+            DELETE FROM event_db.users
+            WHERE login LIKE 'mvp_test_%'
+               OR login LIKE 'techuser_%';
+          " || echo "DB rollback skipped (DB not initialized)"
+
+      # ------------------------------------------------------------------
+      # Вычитывание сообщений из MailHog (всегда, требование 8).
+      # ------------------------------------------------------------------
+      - name: Drain MailHog inbox (always)
+        if: always()
         run: |
           echo "Checking MailHog messages..."
-          curl -s http://localhost:8025/api/v2/messages | jq '.items | length'
-      - name: Dump MailHog inbox
+          curl -sf http://localhost:8025/api/v2/messages \
+            | jq '.items | length' \
+            || echo "MailHog not available"
+
+      - name: Dump MailHog inbox content (always)
+        if: always()
         run: |
-          curl -s http://localhost:8025/api/v2/messages | jq '.items[] | {subject: .Content.Headers.Subject, body: .Content.Body}'
+          curl -sf http://localhost:8025/api/v2/messages \
+            | jq '.items[] | {subject: .Content.Headers.Subject, body: .Content.Body}' \
+            || echo "No messages or MailHog not available"
 
       - name: Ensure Allure e2e results exist
+        if: always()
         run: |
           if [ ! -d "allure-results/e2e" ] || [ -z "$(ls -A allure-results/e2e)" ]; then
             echo '{
