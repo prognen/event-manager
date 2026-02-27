@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
@@ -156,13 +156,13 @@
                     {% if session.program %}
                     <a href="#dRouteModal" 
                         class="modal-trigger programData-link"
-                        data-id="{{ route.d_session.id }}"
-                        data-type-transport="{{ route.d_session.type_transport }}"
+                        data-id="{{ session.program.id }}"
+                        data-type-transport="{{ session.program.type_transport }}"
                         data-cost="{{ session.program.cost }}"
                         data-distance="{{ session.program.distance }}"
                         data-departure-city="{{ session.program.from_venue }}"
                         data-destination-city="{{ session.program.to_venue }}">
-                        Сессия #{{ route.d_session.id }}
+                        Сессия #{{ session.program.id }}
                     </a>
                     {% else %}
                         Не указан
@@ -174,9 +174,9 @@
                             class="modal-trigger event-link"
                             data-id="{{ session.event.id }}"
                             data-status="{{ session.event.status }}"
-                            data-users="{{ session.event.users | map(attribute='fio') | join(', ') }}"
-                            data-entertainments='{{ session.event.entertainments | tojson }}'
-                            data-accommodations='{{ session.event.accommodations | tojson }}'>
+                            data-users="{% for u in session.event.users %}{{ u.fio }}{% if not loop.last %}, {% endif %}{% endfor %}"
+                            data-entertainments='{{ session.event.activities | tojson if session.event.activities else '[]' }}'
+                            data-accommodations='{{ session.event.lodgings | tojson if session.event.lodgings else '[]' }}'>
                             Мероприятие #{{ session.event.id }}
                         </a>
                     {% else %}
@@ -184,8 +184,8 @@
                     {% endif %}
                 </td>
 
-                <td>{{ route.start_time }}</td>
-                <td>{{ route.end_time }}</td>
+                <td>{{ session.start_time }}</td>
+                <td>{{ session.end_time }}</td>
                 <td>{{ session.type }}</td>
 
                 <td>
@@ -199,8 +199,8 @@
                     data-id="{{ session.id }}"
                     data-program='{{ session.program | tojson }}'
                     data-event='{{ session.event.id }}'
-                    data-start="{{ route.start_time }}"
-                    data-end="{{ route.end_time }}"
+                    data-start="{{ session.start_time }}"
+                    data-end="{{ session.end_time }}"
                     data-type="{{ session.type }}">
                     <i class="material-icons">edit</i>
                 </a>
@@ -228,8 +228,8 @@
           <select id="d_session_id" name="d_session_id" required>
             <option value="" disabled selected>Выберите Сессия</option>
               {% for program in programs %}
-                  <option value="{{ program.d_session_id }}">
-                      Сессия #{{ program.d_session_id }}: {{ program.from_venue.name }} → {{ program.to_venue.name }} ({{ d_session.type_transport }})
+                  <option value="{{ program.program_id }}">
+                      Сессия #{{ program.program_id }}: {{ program.from_venue.name if program.from_venue else '' }} → {{ program.to_venue.name if program.to_venue else '' }} ({{ program.type_transport }})
                   </option>
               {% endfor %}
           </select>
@@ -242,13 +242,13 @@
             {% for event in events %}
               <option value="{{ event.event_id }}"
                       data-status="{{ event.status }}"
-                      data-user="{{ event.user_id }}"
-                      data-entertainments='{{ event.entertainments }}'
-                      data-accommodations='{{ event.accommodations }}'>
+                      data-user="{{ event.users[0].user_id if event.users else '' }}"
+                      data-entertainments='{{ event.activities | tojson }}'
+                      data-accommodations='{{ event.lodgings | tojson }}'>
                 Мероприятие #{{ event.event_id }}: 
-                {{ event.users.fio }}, ({{ event.status }})
-                {% if event.entertainments %} | Активности: {{ event.entertainments|length }}{% endif %}
-                {% if event.accommodations %} | Размещения: {{ event.accommodations|length }}{% endif %}
+                {{ (event.users | map(attribute='fio') | join(', ')) if event.users else 'Нет участников' }}, ({{ event.status }})
+                {% if event.activities %} | Активности: {{ event.activities|length }}{% endif %}
+                {% if event.lodgings %} | Размещения: {{ event.lodgings|length }}{% endif %}
               </option>
             {% endfor %}
           </select>
@@ -286,8 +286,8 @@
         <select id="editDRouteId" name="editDRouteId" required>
           <option value="" disabled selected>Выберите Сессия</option>
             {% for program in programs %}
-                <option value="{{ program.d_session_id }}">
-                    Сессия #{{ program.d_session_id }}: {{ program.from_venue.name }} → {{ program.to_venue.name }} ({{ d_session.type_transport }})
+                <option value="{{ program.program_id }}">
+                    Сессия #{{ program.program_id }}: {{ program.from_venue.name if program.from_venue else '' }} → {{ program.to_venue.name if program.to_venue else '' }} ({{ program.type_transport }})
                 </option>
             {% endfor %}
         </select>
@@ -300,13 +300,13 @@
           {% for event in events %}
             <option value="{{ event.event_id }}"
                     data-status="{{ event.status }}"
-                    data-user="{{ event.user_id }}"
-                    data-entertainments='{{ event.entertainments }}'
-                    data-accommodations='{{ event.accommodations }}'>
+                    data-user="{{ event.users[0].user_id if event.users else '' }}"
+                    data-entertainments='{{ event.activities | tojson }}'
+                    data-accommodations='{{ event.lodgings | tojson }}'>
               Мероприятие #{{ event.event_id }}: 
-              {{ event.users.fio }}, ({{ event.status }})
-              {% if event.entertainments %} | Активности: {{ event.entertainments|length }}{% endif %}
-              {% if event.accommodations %} | Размещения: {{ event.accommodations|length }}{% endif %}
+              {{ (event.users | map(attribute='fio') | join(', ')) if event.users else 'Нет участников' }}, ({{ event.status }})
+              {% if event.activities %} | Активности: {{ event.activities|length }}{% endif %}
+              {% if event.lodgings %} | Размещения: {{ event.lodgings|length }}{% endif %}
             </option>
           {% endfor %}
         </select>
