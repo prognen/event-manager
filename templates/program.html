@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
@@ -140,7 +140,7 @@
             <td>{{ program.cost }}</td>
             <td>{{ program.distance }}</td>
             <td>{{ program.from_venue.name }}</td>
-            <td>{{ program.destination_venue.name }}</td>
+            <td>{{ program.to_venue.name }}</td>
             <td>
               <form method="post" action="/api/programs/delete/{{ program.id }}" onsubmit="return confirm('Удалить этот Программа?');">
                 <button type="submit" class="btn-flat" style="color: #888;">

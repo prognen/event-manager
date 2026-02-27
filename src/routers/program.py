@@ -2,8 +2,6 @@ from __future__ import annotations
 
 import logging
 
-from typing import Any
-
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Request
@@ -48,18 +46,6 @@ async def get_all_programs(
         "program.html",
         {"request": request, "programs": programs, "venues": venues},
     )
-
-
-@program_router.get("/program.html")
-async def get_program(
-    request: Request, service_locator: ServiceLocator = get_sl_dep
-) -> dict[str, Any]:
-    result = await service_locator.get_program_contr().get_program_details(request)
-    if result is None:
-        logger.warning("Программа не найдена")
-        return {"error": "Program not found"}
-    logger.info("Информация о программе получена: %s", result)
-    return result
 
 
 @program_router.put("/api/programs/{program_id}", response_class=HTMLResponse)
