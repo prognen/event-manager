@@ -179,7 +179,7 @@ async def create_tables(session: AsyncSession) -> None:
             from_venue INT REFERENCES Venue(venue_id) ON DELETE CASCADE,
             to_venue INT REFERENCES Venue(venue_id) ON DELETE CASCADE,
             distance INT NOT NULL,
-            price INT NOT NULL
+            cost INT NOT NULL
         )
         """,
         """
@@ -324,92 +324,92 @@ async def fill_test_data(session: AsyncSession) -> None:
             "from_venue": 3,
             "to_venue": 5,
             "distance": 966,
-            "price": 3987,
+            "cost": 3987,
         },
         {
             "type_transport": "Самолет",
             "from_venue": 3,
             "to_venue": 5,
             "distance": 966,
-            "price": 5123,
+            "cost": 5123,
         },
         {
             "type_transport": "Автобус",
             "from_venue": 3,
             "to_venue": 4,
             "distance": 1840,
-            "price": 3796,
+            "cost": 3796,
         },
         {
             "type_transport": "Поезд",
             "from_venue": 3,
             "to_venue": 5,
             "distance": 966,
-            "price": 2541,
+            "cost": 2541,
         },
         {
             "type_transport": "Автобус",
             "from_venue": 3,
             "to_venue": 5,
             "distance": 966,
-            "price": 4756,
+            "cost": 4756,
         },
         {
             "type_transport": "Самолет",
             "from_venue": 3,
             "to_venue": 4,
             "distance": 1840,
-            "price": 8322,
+            "cost": 8322,
         },
         {
             "type_transport": "Поезд",
             "from_venue": 3,
             "to_venue": 4,
             "distance": 1840,
-            "price": 4305,
+            "cost": 4305,
         },
         {
             "type_transport": "Самолет",
             "from_venue": 5,
             "to_venue": 4,
             "distance": 3025,
-            "price": 10650,
+            "cost": 10650,
         },
         {
             "type_transport": "Поезд",
             "from_venue": 5,
             "to_venue": 4,
             "distance": 3025,
-            "price": 5988,
+            "cost": 5988,
         },
         {
             "type_transport": "Самолет",
             "from_venue": 1,
             "to_venue": 2,
             "distance": 467,
-            "price": 2223,
+            "cost": 2223,
         },
         {
             "type_transport": "Поезд",
             "from_venue": 1,
             "to_venue": 2,
             "distance": 515,
-            "price": 1911,
+            "cost": 1911,
         },
         {
             "type_transport": "Поезд",
             "from_venue": 4,
             "to_venue": 1,
             "distance": 1780,
-            "price": 3500,
+            "cost": 3500,
         },
     ]
     for data in programs:
         await session.execute(
             text(
-                "INSERT INTO program (type_transport, from_venue, \
-                to_venue, distance, price) \
-            VALUES (:type_transport, :from_venue, :to_venue, :distance, :price)"
+                "INSERT INTO program (type_transport, from_venue, "
+                "to_venue, distance, cost) "
+                "VALUES (:type_transport, :from_venue, :to_venue, :distance, :cost)"
             ),
             data,
         )
