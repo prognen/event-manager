@@ -1,27 +1,40 @@
 [
-    {
-      "name": "no_tracing_default_logs",
-      "ENABLE_TRACING": "0",
-      "LOG_LEVEL": "info",
-      "profiles": ["test"]
-    },
-    {
-      "name": "tracing_default_logs",
-      "ENABLE_TRACING": "1",
-      "LOG_LEVEL": "info",
-      "profiles": ["test", "tracing"]
-    },
-    {
-      "name": "no_tracing_debug_logs",
-      "ENABLE_TRACING": "0",
-      "LOG_LEVEL": "debug",
-      "profiles": ["test"]
-    },
-    {
-      "name": "tracing_debug_logs",
-      "ENABLE_TRACING": "1",
-      "LOG_LEVEL": "debug",
-      "profiles": ["test", "tracing"]
-    }
-  ]
-  
+  {
+    "name": "no_tracing_info",
+    "framework": "fastapi",
+    "ENABLE_TRACING": "0",
+    "LOG_LEVEL": "info",
+    "profiles": ["benchmark"],
+    "description": "Базовый режим: без трассировки, info-логи"
+  },
+  {
+    "name": "tracing_info",
+    "framework": "fastapi",
+    "ENABLE_TRACING": "1",
+    "LOG_LEVEL": "info",
+    "profiles": ["benchmark", "tracing"],
+    "description": "С трассировкой OpenTelemetry, info-логи (Лаба 5)"
+  },
+  {
+    "name": "no_tracing_debug",
+    "framework": "fastapi",
+    "ENABLE_TRACING": "0",
+    "LOG_LEVEL": "debug",
+    "profiles": ["benchmark"],
+    "description": "Без трассировки, debug-логи (нагрузка от логирования)"
+  },
+  {
+    "name": "tracing_debug",
+    "framework": "fastapi",
+    "ENABLE_TRACING": "1",
+    "LOG_LEVEL": "debug",
+    "profiles": ["benchmark", "tracing"],
+    "description": "Трассировка + debug-логи (макс. нагрузка)"
+  },
+  {
+    "name": "flask",
+    "framework": "flask",
+    "profiles": ["benchmark-flask"],
+    "description": "Альтернативный фреймворк (Лаба 3)"
+  }
+]

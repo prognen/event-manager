@@ -70,6 +70,9 @@ class User(BaseModel):
     @field_validator("password")
     @classmethod
     def validate_password(cls, v: str) -> str:
+        # bcrypt-хеш из БД — не валидируем как пароль
+        if v.startswith(("$2a$", "$2b$", "$2y$")):
+            return v
         if len(v) < cls.MIN_PASSWORD_LENGTH:
             raise ValueError("Пароль должен содержать не менее 8 символов")
         if not re.search(r"[A-Z]", v):

@@ -208,3 +208,44 @@ docker compose stop tcpdump
 # или просматривается командой:
 tcpdump -r captures/docker_traffic.pcap -nn -q
 ```
+
+### Бенчмарк производительности (Лабораторная №3, №5)
+
+**Лаба 3:** сравнение FastAPI vs Flask.  
+**Лаба 5:** сравнение приложение vs трассировка/мониторинг/логирование.
+
+Режимы (`benchmark/modes.json`):
+- `no_tracing_info` — без трассировки, info-логи (базовый)
+- `tracing_info` — с OpenTelemetry, info-логи
+- `no_tracing_debug` — без трассировки, debug-логи
+- `tracing_debug` — трассировка + debug-логи
+- `flask` — альтернативный фреймворк
+
+```bash
+# 1. Создать сети (если ещё нет)
+docker network create my_network 2>/dev/null || true
+docker network create monitoring 2>/dev/null || true
+
+# 1a. Перед первым запуском бенчмарка — сбросить БД (user1/123!e5T78 из seed):
+docker compose down -v
+docker compose up -d db app
+
+# 2. Один режим (например, с трассировкой)
+./benchmark/run_benchmark.sh tracing_info
+
+# 3. Все режимы
+./benchmark/run_benchmark.sh all
+
+# 4. Быстрый прогон (60 сек)
+BENCHMARK_QUICK=1 ./benchmark/run_benchmark.sh no_tracing_info
+
+# 4a. Только сценарий логина (без ожидания json/medium/heavy)
+BENCHMARK_SCENARIO=login BENCHMARK_QUICK=1 ./benchmark/run_benchmark.sh fastapi
+
+# 5. Графики (требует matplotlib)
+poetry run pip install matplotlib
+poetry run python benchmark/plot_results.py results/*_report.json results/plots
+```
+
+Результаты: `results/*.csv`, `results/*_report.json`, `results/*_resources_report.json`  
+При трассировке: `*_resources_full_report.json` — app + otel + jaeger (для отчёта Лабы 5)

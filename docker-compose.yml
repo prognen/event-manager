@@ -6,8 +6,8 @@ services:
     ports:
       - "8000:8000"
     environment:
-      ENABLE_TRACING: "1"
-      LOG_LEVEL: "info"
+      ENABLE_TRACING: "${ENABLE_TRACING:-0}"
+      LOG_LEVEL: "${LOG_LEVEL:-info}"
       DB_HOST: db
       DB_PORT: 5432
       DB_USER: egor
@@ -197,6 +197,8 @@ services:
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
     container_name: otel_collector
+    profiles:
+      - tracing
     command: ["--config=/etc/otel-config.yaml"]
     volumes:
       - ./otel-config.yaml:/etc/otel-config.yaml
@@ -219,6 +221,8 @@ services:
   jaeger:
     image: jaegertracing/all-in-one:latest
     container_name: jaeger
+    profiles:
+      - tracing
     ports:
       - "16686:16686"   # Web UI
       - "14250:14250"   # Model.proto
@@ -252,6 +256,46 @@ services:
     networks:
       - monitoring
 
+  benchmark:
+    build: .
+    container_name: benchmark_runner
+    environment:
+      BASE_URL: "http://app:8000"
+      BENCHMARK_DURATION: "300"
+      BENCHMARK_OUTPUT: "/results"
+      DOCKER_APP_CONTAINER: "test_debug-app-1"
+    volumes:
+      - ./results:/results
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - my_network
+    profiles:
+      - benchmark
+    command: >
+      sh -c "
+        pip install httpx -q &&
+        python benchmark/benchmark_runner.py --base-url http://app:8000 --output-dir /results --framework fastapi --duration 300
+      "
+
+  flask-app:
+    build:
+      context: .
+      dockerfile: benchmark/Dockerfile.flask
+    container_name: flask_app
+    image: event_manager_flask
+    ports:
+      - "8001:8000"
+    environment:
+      DATABASE_URL: postgresql://egor:egor@db:5432/mydb
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - my_network
+    profiles:
+      - benchmark-flask
 
   # grafana:
   #   image: grafana/grafana

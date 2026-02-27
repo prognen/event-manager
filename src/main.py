@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 
+from typing import Any
 from typing import AsyncGenerator
 from contextlib import asynccontextmanager
 
@@ -78,3 +79,42 @@ async def handle_exceptions(request: Request, exc: Exception) -> JSONResponse:
 @app.get("/health")
 async def health_check() -> dict[str, str]:
     return {"status": "OK"}
+
+
+@app.get("/api/benchmark/json")
+async def benchmark_json_serialization() -> dict[str, str | list[dict[str, str | int]]]:
+    """Эндпоинт для бенчмарка сериализации JSON (аналог TechEmpower json test)."""
+    return {
+        "message": "Hello, World!",
+        "items": [
+            {"id": i, "name": f"item_{i}", "value": i * 100}
+            for i in range(50)
+        ],
+    }
+
+
+@app.get("/api/benchmark/medium")
+async def benchmark_medium() -> dict[str, list[dict[str, str | int]]]:
+    """Средний запрос — JSON ~10KB (эквивалент для сравнения с Flask)."""
+    return {
+        "venues": [
+            {"id": i, "name": f"Venue_{i}", "city": "Moscow", "capacity": 100 + i}
+            for i in range(50)
+        ],
+    }
+
+
+@app.get("/api/benchmark/heavy")
+async def benchmark_heavy() -> dict[str, list[dict[str, Any]]]:
+    """Тяжёлый запрос — JSON ~50KB (эквивалент для сравнения с Flask)."""
+    return {
+        "events": [
+            {
+                "id": i,
+                "name": f"Event_{i}",
+                "activities": [{"id": j, "name": f"act_{j}"} for j in range(20)],
+                "lodgings": [{"id": k, "name": f"lodg_{k}"} for k in range(5)],
+            }
+            for i in range(30)
+        ],
+    }

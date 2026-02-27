@@ -396,61 +396,64 @@ jobs:
             test-reports/e2e-tests.xml
         if: always()
 
-  # benchmark-tests:
-  #   runs-on: ubuntu-latest
-  #   needs: [unit-tests, integration-tests, e2e-tests]
-  #   if: always()
-  #
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v4
-  #
-  #     - name: Check Docker version
-  #       run: |
-  #         docker --version
-  #         docker compose version
-  #
-  #     - name: Prepare results directories
-  #       run: |
-  #         mkdir -p results
-  #         mkdir -p allure-results/benchmark
-  #
-  #     - name: Run benchmark script
-  #       run: |
-  #         chmod +x benchmark/run_benchmark.sh
-  #         chmod +x benchmark/collect_stats.sh
-  #         ./benchmark/run_benchmark.sh
-  #
-  #     - name: Verify generated files
-  #       run: |
-  #         echo "Results directory contents:"
-  #         ls -la results
-  #         echo "Allure benchmark directory contents:"
-  #         ls -la allure-results/benchmark
-  #
-  #     - name: Convert CSV to Allure attachments
-  #       run: |
-  #         for f in results/*.csv; do
-  #           name=$(basename "$f")
-  #           echo "Attaching $name to Allure"
-  #           cat "$f" > "allure-results/benchmark/${name}.txt"
-  #         done
-  #
-  #     - name: Upload benchmark CSV results
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: benchmark-metrics
-  #         path: results/*.csv
-  #
-  #     - name: Upload benchmark Allure files
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: benchmark-allure
-  #         path: allure-results/benchmark/*.txt
+  benchmark-tests:
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests, e2e-tests]
+    if: always()
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: |
+          poetry install --with dev
+          poetry run pip install httpx
+
+      - name: Create Docker networks
+        run: |
+          docker network create my_network 2>/dev/null || true
+          docker network create monitoring 2>/dev/null || true
+
+      - name: Start Postgres and FastAPI app
+        run: |
+          ENABLE_TRACING=0 LOG_LEVEL=info docker compose up -d db app
+          sleep 15
+          curl -sf http://localhost:8000/health || (docker compose logs app; exit 1)
+
+      - name: Run FastAPI benchmark (60 sec quick run)
+        run: |
+          mkdir -p results
+          poetry run python benchmark/benchmark_runner.py \
+            --base-url http://localhost:8000 \
+            --output-dir results \
+            --framework fastapi \
+            --quick
+
+      - name: Verify benchmark results
+        run: |
+          ls -la results/
+          test -n "$(ls -A results/*.json 2>/dev/null)" || exit 1
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: results/
 
   allure-report:
     runs-on: ubuntu-latest
-    needs: [unit-tests, integration-tests, e2e-tests]
+    needs: [unit-tests, integration-tests, e2e-tests, benchmark-tests]
     if: always()
     
     steps:

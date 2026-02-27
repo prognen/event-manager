@@ -3,6 +3,7 @@ from __future__ import annotations
 import configparser
 import logging
 import logging.handlers
+import os
 import sys
 
 from pathlib import Path
@@ -14,9 +15,9 @@ def setup_logging() -> None:
     log_dir = Path("logs")
     log_dir.mkdir(exist_ok=True)
     try:
-        log_level = getattr(
-            logging, config["app"].get("LOG_LEVEL", "DEBUG").upper(), logging.DEBUG
-        )
+        # LOG_LEVEL из env (для бенчмарка/Лаба 5) имеет приоритет над config.cfg
+        log_level_str = os.environ.get("LOG_LEVEL") or config["app"].get("LOG_LEVEL", "DEBUG")
+        log_level = getattr(logging, log_level_str.upper(), logging.DEBUG)
 
         simple_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
         detailed_format = "%(asctime)s - %(name)s - %(levelname)s [%(filename)s:%(lineno)d] - %(message)s"
