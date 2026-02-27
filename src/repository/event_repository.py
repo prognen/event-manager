@@ -140,13 +140,12 @@ class EventRepository(IEventRepository):
             return None
 
     async def add(self, event: Event) -> Event:
-        query = text("INSERT INTO Event (status, user_id) VALUES (:status, :user_id) RETURNING id")
+        query = text("INSERT INTO Event (status) VALUES (:status) RETURNING id")
         activity_query = text("INSERT INTO event_activity (event_id, activity_id) VALUES (:event_id, :activity_id)")
         lodging_query = text("INSERT INTO event_lodgings (event_id, lodging_id) VALUES (:event_id, :lodging_id)")
         user_query = text("INSERT INTO users_event (event_id, users_id) VALUES (:event_id, :users_id)")
         try:
-            user_id = event.users[0].user_id if event.users else 1
-            result = await self.session.execute(query, {"status": event.status, "user_id": user_id})
+            result = await self.session.execute(query, {"status": event.status})
             event_id = result.scalar_one()
             event.event_id = event_id
 
