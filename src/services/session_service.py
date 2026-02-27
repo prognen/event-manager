@@ -109,5 +109,9 @@ class SessionService(ISessionService):
         logger.debug("Получение сессии по type: %s", type_session)
         return await self.repository.get_sessions_by_type(type_session)
 
+    async def get_sessions_by_event_id(self, event_id: int) -> list[Session]:
+        logger.debug("Получение сессий для мероприятия ID %d", event_id)
+        return await self.repository.get_sessions_by_event_id_ordered(event_id)
+
     async def get_session_parts(self, session_id: int) -> list[dict[str, Any]]:
         return await self.repository.get_session_parts(session_id)

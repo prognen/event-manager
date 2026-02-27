@@ -132,6 +132,29 @@ async def login1_user(
     )
 
 
+def _session_to_profile_dict(session) -> dict:
+    """Преобразует сессию в словарь для шаблона profile_user.html."""
+    program = session.program
+    event = session.event
+    destination_venue = (
+        program.to_venue.name if program and program.to_venue else ""
+    )
+    transport = program.type_transport if program else ""
+    cost = program.cost if program else 0
+    return {
+        "session_id": session.session_id,
+        "event_id": event.event_id if event else None,
+        "destination_venue": destination_venue,
+        "start_time": session.start_time,
+        "end_time": session.end_time,
+        "transport": transport,
+        "cost": cost,
+        "users": event.users if event else [],
+        "activities": event.activities if event else [],
+        "lodgings": event.lodgings if event else [],
+    }
+
+
 @user_router.get("/profile_user/{user_id}", response_class=HTMLResponse)
 async def get_user_profile(
     user_id: int, request: Request, service_locator: ServiceLocator = get_sl_dep
@@ -143,15 +166,27 @@ async def get_user_profile(
     completed_events = await service_locator.get_event_serv().get_events_for_user(
         user_id, "Завершено"
     )
-    logger.info("completed_events %s", completed_events)
+    session_serv = service_locator.get_session_serv()
+
+    active_sessions: list[dict] = []
+    for event in active_events:
+        sessions = await session_serv.get_sessions_by_event_id(event.event_id)
+        active_sessions.extend(_session_to_profile_dict(s) for s in sessions)
+
+    completed_sessions: list[dict] = []
+    for event in completed_events:
+        sessions = await session_serv.get_sessions_by_event_id(event.event_id)
+        completed_sessions.extend(_session_to_profile_dict(s) for s in sessions)
+
+    logger.info("active_sessions %d, completed_sessions %d", len(active_sessions), len(completed_sessions))
 
     return templates.TemplateResponse(
         "profile_user.html",
         {
             "request": request,
             "user": profile_data,
-            "active_routes": active_events,
-            "completed_events": completed_events,
+            "active_sessions": active_sessions,
+            "completed_sessions": completed_sessions,
             "current_user_id": profile_data["user"]["user_id"],
         },
     )
