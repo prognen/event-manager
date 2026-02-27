@@ -16,6 +16,8 @@ from fastapi.responses import RedirectResponse
 from fastapi.responses import Response
 from fastapi.templating import Jinja2Templates
 
+from models.event import Event
+
 from service_locator import ServiceLocator
 from service_locator import get_service_locator
 
@@ -64,6 +66,40 @@ async def get_session_page(
     )
 
 
+def _serialize_event_for_template(event: Event) -> dict[str, Any]:
+    """Преобразует Event в словарь, сериализуемый в JSON для data-атрибутов."""
+    return {
+        "event_id": event.event_id,
+        "status": event.status,
+        "users": [{"user_id": u.user_id, "fio": u.fio, "email": u.email} for u in (event.users or [])],
+        "activities": [
+            {
+                "id": a.activity_id,
+                "activity_type": a.activity_type,
+                "address": a.address,
+                "duration": a.duration,
+                "activity_time": a.activity_time.isoformat() if a.activity_time else None,
+                "venue_name": a.venue.name if a.venue else "Не указан",
+            }
+            for a in (event.activities or [])
+        ],
+        "lodgings": [
+            {
+                "id": ldg.lodging_id,
+                "name": ldg.name,
+                "address": ldg.address,
+                "price": ldg.price,
+                "type": ldg.type,
+                "rating": ldg.rating,
+                "check_in": ldg.check_in.isoformat() if ldg.check_in else None,
+                "check_out": ldg.check_out.isoformat() if ldg.check_out else None,
+                "venue_name": ldg.venue.name if ldg.venue else "Не указан",
+            }
+            for ldg in (event.lodgings or [])
+        ],
+    }
+
+
 @session_router.get("/session.html", response_class=HTMLResponse)
 async def get_all_sessions(
     request: Request, service_locator: ServiceLocator = get_sl_dep
@@ -73,8 +109,10 @@ async def get_all_sessions(
     user = None
 
     for session in sessions:
-        session["start_time"] = datetime.fromisoformat(session["start_time"])
-        session["end_time"] = datetime.fromisoformat(session["end_time"])
+        st = session.get("start_time")
+        et = session.get("end_time")
+        session["start_time"] = datetime.fromisoformat(st) if st else None
+        session["end_time"] = datetime.fromisoformat(et) if et else None
 
         if session.get("event"):
             event = session["event"]
@@ -136,12 +174,15 @@ async def get_all_sessions(
                 )
             event["lodgings"] = serialized_lodgings
 
+    events_raw = await service_locator.get_event_serv().get_all_events()
+    events_serialized = [_serialize_event_for_template(e) for e in events_raw]
+
     return templates.TemplateResponse(
         "session.html",
         {
             "request": request,
             "sessions": sessions,
-            "events": await service_locator.get_event_serv().get_all_events(),
+            "events": events_serialized,
             "programs": await service_locator.get_program_serv().get_list(),
             "user": user,
         },

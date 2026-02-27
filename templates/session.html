@@ -246,7 +246,7 @@
                       data-entertainments='{{ event.activities | tojson }}'
                       data-accommodations='{{ event.lodgings | tojson }}'>
                 Мероприятие #{{ event.event_id }}: 
-                {{ (event.users | map(attribute='fio') | join(', ')) if event.users else 'Нет участников' }}, ({{ event.status }})
+                {% for u in event.users %}{{ u.fio }}{% if not loop.last %}, {% endif %}{% endfor %}{% if not event.users %}Нет участников{% endif %}, ({{ event.status }})
                 {% if event.activities %} | Активности: {{ event.activities|length }}{% endif %}
                 {% if event.lodgings %} | Размещения: {{ event.lodgings|length }}{% endif %}
               </option>
@@ -304,7 +304,7 @@
                     data-entertainments='{{ event.activities | tojson }}'
                     data-accommodations='{{ event.lodgings | tojson }}'>
               Мероприятие #{{ event.event_id }}: 
-              {{ (event.users | map(attribute='fio') | join(', ')) if event.users else 'Нет участников' }}, ({{ event.status }})
+              {% for u in event.users %}{{ u.fio }}{% if not loop.last %}, {% endif %}{% endfor %}{% if not event.users %}Нет участников{% endif %}, ({{ event.status }})
               {% if event.activities %} | Активности: {{ event.activities|length }}{% endif %}
               {% if event.lodgings %} | Размещения: {{ event.lodgings|length }}{% endif %}
             </option>
