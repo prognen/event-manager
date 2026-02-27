@@ -16,7 +16,9 @@ def setup_logging() -> None:
     log_dir.mkdir(exist_ok=True)
     try:
         # LOG_LEVEL из env (для бенчмарка/Лаба 5) имеет приоритет над config.cfg
-        log_level_str = os.environ.get("LOG_LEVEL") or config["app"].get("LOG_LEVEL", "DEBUG")
+        log_level_str: str = (
+            os.environ.get("LOG_LEVEL") or config["app"].get("LOG_LEVEL", "DEBUG") or "DEBUG"
+        )
         log_level = getattr(logging, log_level_str.upper(), logging.DEBUG)
 
         simple_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
