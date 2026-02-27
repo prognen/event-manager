@@ -161,6 +161,18 @@ class AuthService(IAuthService):
             self.blocked_users[login] = now + 60  # блокируем на 60 секунд
             logger.warning(f"Пользователь {login} заблокирован на 60 секунд")
 
+    def is_blocked(self, login: str) -> bool:
+        """Проверка, заблокирован ли пользователь."""
+        if login not in self.blocked_users:
+            return False
+        unblock_time = self.blocked_users[login]
+        if time.time() >= unblock_time:
+            del self.blocked_users[login]
+            if login in self.failed_attempts:
+                self.failed_attempts[login] = []
+            return False
+        return True
+
     async def unblock_user(self, login: str) -> None:
         if login in self.blocked_users:
             del self.blocked_users[login]

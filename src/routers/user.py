@@ -107,6 +107,10 @@ async def login1_user(
     login = data.get("login")
     password = data.get("password")
 
+    auth_serv = service_locator.get_auth_serv()
+    if auth_serv.is_blocked(login):
+        raise HTTPException(status_code=403, detail="User temporarily blocked")
+
     user = await service_locator.get_user_repo().get_by_login(login)
     if not user:
         raise HTTPException(status_code=401, detail="Invalid login or password")
@@ -116,11 +120,11 @@ async def login1_user(
             status_code=403,
             content={"password_expired": True, "message": "Password expired"},
         )
-    valid = await service_locator.get_auth_serv().authenticate(login, password)
+    valid = await auth_serv.authenticate(login, password)
     if not valid:
         raise HTTPException(status_code=401, detail="Invalid login or password")
 
-    code = await service_locator.get_auth_serv().generate_2fa_code(login)
+    code = await auth_serv.generate_2fa_code(login)
 
     await send_email(user.email, "Ваш 2FA код", f"Ваш код: {code}")
 
