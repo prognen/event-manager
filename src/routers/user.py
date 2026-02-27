@@ -19,6 +19,8 @@ from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
+from models.session import Session
+
 from service_locator import ServiceLocator
 from service_locator import get_service_locator
 
@@ -132,7 +134,7 @@ async def login1_user(
     )
 
 
-def _session_to_profile_dict(session) -> dict:
+def _session_to_profile_dict(session: Session) -> dict[str, Any]:
     """Преобразует сессию в словарь для шаблона profile_user.html."""
     program = session.program
     event = session.event
@@ -168,12 +170,12 @@ async def get_user_profile(
     )
     session_serv = service_locator.get_session_serv()
 
-    active_sessions: list[dict] = []
+    active_sessions: list[dict[str, Any]] = []
     for event in active_events:
         sessions = await session_serv.get_sessions_by_event_id(event.event_id)
         active_sessions.extend(_session_to_profile_dict(s) for s in sessions)
 
-    completed_sessions: list[dict] = []
+    completed_sessions: list[dict[str, Any]] = []
     for event in completed_events:
         sessions = await session_serv.get_sessions_by_event_id(event.event_id)
         completed_sessions.extend(_session_to_profile_dict(s) for s in sessions)
