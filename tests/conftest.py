@@ -197,8 +197,7 @@ async def create_tables(session: AsyncSession) -> None:
         """
         CREATE TABLE Event (
             id SERIAL PRIMARY KEY,
-            status VARCHAR NOT NULL,
-            user_id INT NOT NULL
+            status VARCHAR NOT NULL
         )
         """,
         """
@@ -451,8 +450,8 @@ async def fill_test_data(session: AsyncSession) -> None:
         )
 
     events_data = [
-        {"status": "Активное", "user_id": 1},
-        {"status": "Завершено", "user_id": 1},
+        {"status": "Активное"},
+        {"status": "Завершено"},
     ]
     tr_ent = [(1, 2), (2, 1)]
     tr_a = [(1, 1), (2, 2)]
@@ -461,13 +460,12 @@ async def fill_test_data(session: AsyncSession) -> None:
         await session.execute(
             text(
                 """
-            INSERT INTO Event (id, status, user_id) VALUES (:id, :status, :user_id)
+            INSERT INTO Event (id, status) VALUES (:id, :status)
         """
             ),
             {
                 "id": i,
                 "status": event_data["status"],
-                "user_id": event_data["user_id"],
             },
         )
     for t in tr_ent:
