@@ -97,7 +97,7 @@ run_mode() {
     EXTRA_ARGS=""
     [ -n "$QUICK" ] && EXTRA_ARGS="$EXTRA_ARGS --quick"
     [ -n "${BENCHMARK_SCENARIO:-}" ] && EXTRA_ARGS="$EXTRA_ARGS --scenario $BENCHMARK_SCENARIO"
-    python benchmark/benchmark_runner.py \
+    poetry run python benchmark/benchmark_runner.py \
         --base-url "$app_url" \
         --duration "$DURATION" \
         --output-dir "$OUTPUT_DIR" \
@@ -108,12 +108,12 @@ run_mode() {
     [ -n "${STATS_FULL_PID:-}" ] && wait $STATS_FULL_PID 2>/dev/null || true
 
     if [ -f "$OUTPUT_DIR/${name}_resources.csv" ]; then
-        python benchmark/aggregate_resources.py \
+        poetry run python benchmark/aggregate_resources.py \
             "$OUTPUT_DIR/${name}_resources.csv" \
             "$OUTPUT_DIR/${name}_resources_report.json"
     fi
     if [ -f "$OUTPUT_DIR/${name}_resources_full.csv" ]; then
-        python benchmark/aggregate_resources.py \
+        poetry run python benchmark/aggregate_resources.py \
             "$OUTPUT_DIR/${name}_resources_full.csv" \
             "$OUTPUT_DIR/${name}_resources_full_report.json" \
             --multi
