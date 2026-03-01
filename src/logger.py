@@ -15,7 +15,7 @@ def setup_logging() -> None:
     log_dir = Path("logs")
     log_dir.mkdir(exist_ok=True)
     try:
-        # LOG_LEVEL из env (для бенчмарка/Лаба 5) имеет приоритет над config.cfg
+        # LOG_LEVEL из env (для бенчмарка) имеет приоритет над config.cfg
         log_level_str: str = (
             os.environ.get("LOG_LEVEL") or config["app"].get("LOG_LEVEL", "DEBUG") or "DEBUG"
         )

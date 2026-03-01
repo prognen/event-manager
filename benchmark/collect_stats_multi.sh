@@ -1,5 +1,5 @@
 #!/bin/bash
-# Сбор метрик для нескольких контейнеров (app + otel + jaeger для Лабы 5).
+# Сбор метрик для нескольких контейнеров (app + otel + jaeger).
 # Использование: ./collect_stats_multi.sh OUTPUT_FILE DURATION_SEC CONTAINER1 CONTAINER2 ...
 OUTPUT_FILE="${1:-results/resources_full.csv}"
 DURATION_SEC="${2:-300}"

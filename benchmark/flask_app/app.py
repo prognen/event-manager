@@ -1,4 +1,4 @@
-"""Минимальное Flask-приложение для сравнения с FastAPI (Лабораторная №3)."""
+"""Минимальное Flask-приложение для сравнения с FastAPI."""
 from __future__ import annotations
 
 import os

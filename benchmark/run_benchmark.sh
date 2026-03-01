@@ -1,8 +1,5 @@
 #!/bin/bash
-# Бенчмарк производительности (Лабораторная №3, №5)
-#
-# Лаба 3: сравнение FastAPI vs Flask
-# Лаба 5: сравнение приложение vs трассировка/мониторинг/логирование
+# Бенчмарк производительности: FastAPI vs Flask, трассировка/мониторинг.
 #
 # Режимы из modes.json:
 #   no_tracing_info   - без трассировки, info-логи (базовый)
@@ -22,7 +19,7 @@ DURATION="${BENCHMARK_DURATION:-300}"
 QUICK="${BENCHMARK_QUICK:-}"
 OUTPUT_DIR="${BENCHMARK_OUTPUT:-results}"
 MODES_FILE="./benchmark/modes.json"
-# Лаба 3 п.2: BENCHMARK_FRESH_BUILD=1 — полная пересборка образа без кэша (медленно)
+# BENCHMARK_FRESH_BUILD=1 — полная пересборка образа без кэша (медленно)
 FRESH_BUILD="${BENCHMARK_FRESH_BUILD:-0}"
 
 mkdir -p "$OUTPUT_DIR"
@@ -44,13 +41,13 @@ run_mode() {
     if [ "$framework" = "flask" ]; then
         app_url="http://localhost:8001"
         app_port=8001
-        # Лаба 3 п.2: отдельный докер-образ на каждый прогон — build + force-recreate
+        # Отдельный докер-образ на каждый прогон — build + force-recreate
         [ "$FRESH_BUILD" = "1" ] && BUILD_OPTS="--no-cache" || BUILD_OPTS=""
         docker compose --profile benchmark-flask build $BUILD_OPTS flask-app
         docker compose --profile benchmark-flask up -d --force-recreate flask-app 2>/dev/null || true
         sleep 5
     else
-        # FastAPI: Лаба 3 п.2 — отдельный образ на прогон: build + force-recreate
+        # FastAPI: отдельный образ на прогон — build + force-recreate
         docker compose stop app otel-collector jaeger 2>/dev/null || true
         [ "$FRESH_BUILD" = "1" ] && BUILD_OPTS="--no-cache" || BUILD_OPTS=""
         docker compose build $BUILD_OPTS app

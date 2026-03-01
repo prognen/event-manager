@@ -57,7 +57,7 @@ def main() -> None:
         sys.exit(1)
 
     if multi_mode:
-        # Группировка по контейнеру (Лаба 5: app, otel, jaeger)
+        # Группировка по контейнеру: app, otel, jaeger
         by_container: dict[str, list[tuple[float, float]]] = {}
         for line in lines[1:]:
             parts = line.strip().split(",")

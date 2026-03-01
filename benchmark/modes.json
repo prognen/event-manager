@@ -13,7 +13,7 @@
     "ENABLE_TRACING": "1",
     "LOG_LEVEL": "info",
     "profiles": ["benchmark", "tracing"],
-    "description": "С трассировкой OpenTelemetry, info-логи (Лаба 5)"
+    "description": "С трассировкой OpenTelemetry, info-логи"
   },
   {
     "name": "no_tracing_debug",
@@ -35,6 +35,6 @@
     "name": "flask",
     "framework": "flask",
     "profiles": ["benchmark-flask"],
-    "description": "Альтернативный фреймворк (Лаба 3)"
+    "description": "Альтернативный фреймворк"
   }
 ]

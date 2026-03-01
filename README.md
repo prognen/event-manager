@@ -209,10 +209,9 @@ docker compose stop tcpdump
 tcpdump -r captures/docker_traffic.pcap -nn -q
 ```
 
-### Бенчмарк производительности (Лабораторная №3, №5)
+### Бенчмарк производительности
 
-**Лаба 3:** сравнение FastAPI vs Flask.  
-**Лаба 5:** сравнение приложение vs трассировка/мониторинг/логирование.
+Сравнение FastAPI vs Flask, трассировка и мониторинг.
 
 Режимы (`benchmark/modes.json`):
 - `no_tracing_info` — без трассировки, info-логи (базовый)
@@ -248,4 +247,6 @@ poetry run python benchmark/plot_results.py results/*_report.json results/plots
 ```
 
 Результаты: `results/*.csv`, `results/*_report.json`, `results/*_resources_report.json`  
-При трассировке: `*_resources_full_report.json` — app + otel + jaeger (для отчёта Лабы 5)
+При трассировке: `*_resources_full_report.json` — app + otel + jaeger.
+
+**CI/CD:** при запуске benchmark-тестов в GitHub Actions собираются метрики CPU/RAM и сохраняются в артефактах.

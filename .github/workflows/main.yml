@@ -425,20 +425,12 @@ jobs:
           docker network create my_network 2>/dev/null || true
           docker network create monitoring 2>/dev/null || true
 
-      - name: Start Postgres and FastAPI app
+      - name: Run benchmarks
         run: |
-          ENABLE_TRACING=0 LOG_LEVEL=info docker compose up -d db app
-          sleep 15
-          curl -sf http://localhost:8000/health || (docker compose logs app; exit 1)
-
-      - name: Run FastAPI benchmark (60 sec quick run)
-        run: |
-          mkdir -p results
-          poetry run python benchmark/benchmark_runner.py \
-            --base-url http://localhost:8000 \
-            --output-dir results \
-            --framework fastapi \
-            --quick
+          chmod +x benchmark/run_benchmark.sh benchmark/collect_stats.sh
+          BENCHMARK_QUICK=1 ./benchmark/run_benchmark.sh fastapi
+          BENCHMARK_QUICK=1 ./benchmark/run_benchmark.sh flask
+          BENCHMARK_QUICK=1 ./benchmark/run_benchmark.sh tracing_info
 
       - name: Verify benchmark results
         run: |
