@@ -1,14 +1,14 @@
 {
   "component": "flask_app",
   "cpu": {
-    "min": 19.61,
-    "max": 90.24,
-    "median": 43.72
+    "min": 0.02,
+    "max": 586.5,
+    "median": 42.61
   },
   "ram_mb": {
-    "min": 24.61,
-    "max": 25.67,
-    "median": 25.09
+    "min": 24.0,
+    "max": 27.18,
+    "median": 25.87
   },
   "samples": 43
 }

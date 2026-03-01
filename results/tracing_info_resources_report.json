@@ -1,0 +1,14 @@
+{
+  "component": "test_debug-app-1",
+  "cpu": {
+    "min": 0.29,
+    "max": 106.16,
+    "median": 101.1
+  },
+  "ram_mb": {
+    "min": 75.25,
+    "max": 89.89,
+    "median": 80.11
+  },
+  "samples": 42
+}

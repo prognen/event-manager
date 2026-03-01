@@ -1,0 +1,13 @@
+{
+  "framework": "flask",
+  "components": {
+    "app": {
+      "cpu_min": 0,
+      "cpu_max": 0,
+      "cpu_median": 0,
+      "ram_min_mb": 0,
+      "ram_max_mb": 0,
+      "ram_median_mb": 0
+    }
+  }
+}

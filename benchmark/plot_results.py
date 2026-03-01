@@ -52,11 +52,16 @@ def plot_percentiles(stats: dict, out_path: Path, title: str) -> None:
     percentiles = ["p50", "p75", "p90", "p95", "p99"]
     labels = ["50%", "75%", "90%", "95%", "99%"]
     values = [stats.get(p, 0) for p in percentiles]
+    if stats.get("count", 0) == 0 or all(v == 0 for v in values):
+        if out_path.exists():
+            out_path.unlink()  # Удалить старый файл с нулями
+        return  # Нет данных — не строим
     plt.figure(figsize=(8, 4))
     plt.bar(labels, values, color="steelblue", edgecolor="black")
     plt.xlabel("Перцентиль")
     plt.ylabel("Задержка, мс")
     plt.title(title)
+    plt.ylim(0, None)  # Задержка неотрицательна
     plt.tight_layout()
     plt.savefig(out_path, dpi=100)
     plt.close()
@@ -67,28 +72,43 @@ def main() -> None:
         print("Установите matplotlib для построения графиков: pip install matplotlib", file=sys.stderr)
         sys.exit(1)
 
-    # Последний аргумент — выходная папка (glob может раскрыться в несколько файлов)
+    # Базовый путь — корень проекта (родитель папки benchmark)
+    script_dir = Path(__file__).resolve().parent
+    project_root = script_dir.parent
+    results_dir = project_root / "results"
+    plots_dir = project_root / "results" / "plots"
+
     args = sys.argv[1:]
     if args and not str(args[-1]).endswith(".json"):
-        out_dir = Path(args[-1])
-        report_glob = args[0] if len(args) > 1 else "results/*_report.json"
+        out_dir = (project_root / args[-1]).resolve()
     else:
-        out_dir = Path("results/plots")
-        report_glob = args[0] if args else "results/*_report.json"
+        out_dir = plots_dir
 
-    paths = list(Path(".").glob(report_glob))
+    # Собираем пути к отчётам: из аргументов или из results/
+    paths = []
+    for a in args:
+        if a.endswith(".json"):
+            p = (project_root / a).resolve() if not Path(a).is_absolute() else Path(a)
+            if p.exists():
+                paths.append(p)
     if not paths:
-        paths = list(Path("results").glob("*_report.json"))
+        paths = list(results_dir.glob("*_report.json"))
+    paths = [p for p in paths if "resources" not in p.name and p.exists()]
     if not paths:
-        print("Не найден отчёт. Укажите путь: python plot_results.py results/fastapi_123_report.json")
+        print("Не найден бенчмарк-отчёт. Укажите: python plot_results.py results/fastapi_123_report.json results/plots")
         sys.exit(1)
-
+    paths.sort(key=lambda p: p.stat().st_mtime, reverse=True)
     report_path = paths[0]
+    print(f"Используется отчёт: {report_path}")
     report = load_report(report_path)
     out_dir.mkdir(parents=True, exist_ok=True)
     framework = report.get("framework", "unknown")
 
-    for scenario, data in report.get("scenarios", {}).items():
+    scenarios = report.get("scenarios", {})
+    if not scenarios:
+        print("В отчёте нет scenarios. Убедитесь, что указан бенчмарк-отчёт (не resources_report).", file=sys.stderr)
+        sys.exit(1)
+    for scenario, data in scenarios.items():
         stats = data.get("statistics", {})
         ts_sample = data.get("time_series_sample", [])
         # Восстанавливаем latencies из histogram или time_series

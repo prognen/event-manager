@@ -1,0 +1,69 @@
+{
+  "components": {
+    "test_debug-app-1": {
+      "cpu": {
+        "min": 0.28,
+        "max": 105.49,
+        "median": 100.54
+      },
+      "ram_mb": {
+        "min": 75.21,
+        "max": 88.5,
+        "median": 80.05
+      },
+      "samples": 27
+    },
+    "otel_collector": {
+      "cpu": {
+        "min": 0.0,
+        "max": 6.61,
+        "median": 2.22
+      },
+      "ram_mb": {
+        "min": 30.85,
+        "max": 74.84,
+        "median": 67.75
+      },
+      "samples": 27
+    },
+    "jaeger": {
+      "cpu": {
+        "min": 0.01,
+        "max": 6.43,
+        "median": 1.07
+      },
+      "ram_mb": {
+        "min": 19.36,
+        "max": 434.0,
+        "median": 375.0
+      },
+      "samples": 27
+    }
+  },
+  "summary": {
+    "app": {
+      "cpu": {
+        "min": 0.28,
+        "max": 105.49,
+        "median": 100.54
+      },
+      "ram_mb": {
+        "min": 75.21,
+        "max": 88.5,
+        "median": 80.05
+      }
+    },
+    "tracing_monitoring": {
+      "cpu": {
+        "min": 0.0,
+        "max": 6.61,
+        "median": 1.2
+      },
+      "ram_mb": {
+        "min": 19.36,
+        "max": 434.0,
+        "median": 74.43
+      }
+    }
+  }
+}

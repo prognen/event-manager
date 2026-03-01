@@ -432,6 +432,11 @@ jobs:
           BENCHMARK_QUICK=1 ./benchmark/run_benchmark.sh flask
           BENCHMARK_QUICK=1 ./benchmark/run_benchmark.sh tracing_info
 
+      - name: Generate benchmark plots
+        run: |
+          poetry run pip install matplotlib
+          poetry run python benchmark/plot_results.py results/*_report.json results/plots
+
       - name: Verify benchmark results
         run: |
           ls -la results/
