@@ -300,6 +300,7 @@ jobs:
           mkdir -p allure-results/e2e
           mkdir -p test-reports
           mkdir -p tests/e2e
+          mkdir -p monitoring-data
 
       # ------------------------------------------------------------------
       # Пропускаем E2E-тесты, если integration-тесты не прошли.
@@ -333,6 +334,21 @@ jobs:
             PGPASSWORD=egor psql -h localhost -U egor -d mydb -f "$script"
           done
 
+      - name: Start tracing stack for CI monitoring
+        if: ${{ needs.integration-tests.result == 'success' }}
+        run: |
+          docker network create my_network 2>/dev/null || true
+          docker network create monitoring 2>/dev/null || true
+          docker compose --profile tracing up -d jaeger otel-collector
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:16686 > /dev/null && curl -sf http://localhost:13133 > /dev/null; then
+              break
+            fi
+            sleep 2
+          done
+          curl -sf http://localhost:16686 > /dev/null
+          curl -sf http://localhost:13133 > /dev/null
+
       - name: Start external mock server (Lab 7)
         if: ${{ needs.integration-tests.result == 'success' }}
         run: |
@@ -346,12 +362,15 @@ jobs:
         if: ${{ needs.integration-tests.result == 'success' }}
         run: |
           nohup env \
+            ENABLE_TRACING=1 \
+            LOG_LEVEL=info \
+            OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317 \
             EXTERNAL_SERVICE_MODE=mock \
             EXTERNAL_SERVICE_MOCK_BASE_URL=http://localhost:8090 \
             EXTERNAL_SERVICE_REAL_BASE_URL=https://jsonplaceholder.typicode.com \
-            poetry run uvicorn src.main:app --host 0.0.0.0 --port 8000 &
+            poetry run uvicorn src.main:app --host 0.0.0.0 --port 8000 \
+            > monitoring-data/app-mock.log 2>&1 &
           sleep 8
-
       - name: Run e2e tests & BDD tests
         if: ${{ needs.integration-tests.result == 'success' }}
         run: |
@@ -379,13 +398,16 @@ jobs:
         run: |
           pkill -f "uvicorn src.main:app" || true
           nohup env \
+            ENABLE_TRACING=1 \
+            LOG_LEVEL=info \
+            OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317 \
             EXTERNAL_SERVICE_MODE=real \
             EXTERNAL_SERVICE_REAL_BASE_URL=https://jsonplaceholder.typicode.com \
             EXTERNAL_SERVICE_MOCK_BASE_URL=http://localhost:8090 \
-            poetry run uvicorn src.main:app --host 0.0.0.0 --port 8001 &
+            poetry run uvicorn src.main:app --host 0.0.0.0 --port 8001 \
+            > monitoring-data/app-real.log 2>&1 &
           sleep 8
           curl -sf http://localhost:8001/health
-
       - name: Run Lab7 e2e (external integration, real mode)
         if: ${{ needs.integration-tests.result == 'success' }}
         run: |
@@ -430,6 +452,17 @@ jobs:
             | jq '.items[] | {subject: .Content.Headers.Subject, body: .Content.Body}' \
             || echo "No messages or MailHog not available"
 
+      - name: Export monitoring data from Jaeger and OTel
+        if: always()
+        run: |
+          mkdir -p monitoring-data
+          curl -sf "http://localhost:16686/api/services" -o monitoring-data/jaeger-services.json \
+            || echo '{"data":[]}' > monitoring-data/jaeger-services.json
+          curl -sf "http://localhost:16686/api/traces?service=event_app&limit=200" -o monitoring-data/jaeger-traces-event_app.json \
+            || echo '{"data":[]}' > monitoring-data/jaeger-traces-event_app.json
+          curl -sf "http://localhost:13133" -o monitoring-data/otel-health.txt \
+            || echo 'otel-collector-unavailable' > monitoring-data/otel-health.txt
+
       - name: Ensure Allure e2e results exist
         if: always()
         run: |
@@ -452,12 +485,21 @@ jobs:
             test-reports/e2e-tests.xml
         if: always()
 
+      - name: Upload CI monitoring data
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-monitoring-data
+          path: monitoring-data/
+        if: always()
+
   benchmark-tests:
     runs-on: ubuntu-latest
     needs: [unit-tests, integration-tests, e2e-tests]
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_benchmarks && needs.unit-tests.result == 'success' && needs.integration-tests.result == 'success' && needs.e2e-tests.result == 'success' }}
 
     steps:
+
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -484,14 +526,20 @@ jobs:
       - name: Run benchmarks
         run: |
           chmod +x benchmark/run_benchmark.sh benchmark/collect_stats.sh
-          BENCHMARK_QUICK=1 ./benchmark/run_benchmark.sh fastapi
-          BENCHMARK_QUICK=1 ./benchmark/run_benchmark.sh flask
+          BENCHMARK_QUICK=1 ./benchmark/run_benchmark.sh no_tracing_info
           BENCHMARK_QUICK=1 ./benchmark/run_benchmark.sh tracing_info
-
+          BENCHMARK_QUICK=1 ./benchmark/run_benchmark.sh no_tracing_debug
+          BENCHMARK_QUICK=1 ./benchmark/run_benchmark.sh tracing_debug
+          BENCHMARK_QUICK=1 ./benchmark/run_benchmark.sh flask
       - name: Generate benchmark plots
         run: |
           poetry run pip install matplotlib
           poetry run python benchmark/plot_results.py results/*_report.json results/plots
+
+      - name: Generate Lab5 comparison report
+        run: |
+          poetry run python benchmark/build_lab5_report.py --results-dir results
+          ls -la results/lab5_comparison_report.*
 
       - name: Verify benchmark results
         run: |
@@ -634,3 +682,5 @@ jobs:
   #         name: test-metrics
   #         path: test-metrics
   #       if: always()
+
+

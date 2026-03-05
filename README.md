@@ -1,4 +1,4 @@
-# EventManager
+﻿# EventManager
 
 Приложение для планирования участия в мероприятиях: пользователь выбирает площадки, формирует программу перемещения, добавляет размещение и активности, после чего работает с итоговой сессией и событием.
 
@@ -152,9 +152,27 @@ docker compose --profile tracing up -d jaeger otel-collector
 
 ### Benchmark
 
+Быстрый запуск (один профиль):
+
 ```bash
 docker compose --profile benchmark run --rm benchmark
 ```
+
+Расширенный запуск для ЛР5 (сравнение трассировки и логирования):
+
+```bash
+BENCHMARK_QUICK=1 ./benchmark/run_benchmark.sh no_tracing_info
+BENCHMARK_QUICK=1 ./benchmark/run_benchmark.sh tracing_info
+BENCHMARK_QUICK=1 ./benchmark/run_benchmark.sh no_tracing_debug
+BENCHMARK_QUICK=1 ./benchmark/run_benchmark.sh tracing_debug
+poetry run python benchmark/build_lab5_report.py --results-dir results
+```
+
+Сводные файлы сравнения:
+- `results/lab5_comparison_report.json`
+- `results/lab5_comparison_report.md`
+
+В CI для e2e-тестов дополнительно сохраняется артефакт мониторинга: `ci-monitoring-data`.
 
 ## Важные роуты
 
