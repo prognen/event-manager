@@ -15,7 +15,7 @@ async def test_get_list_programs(
     programs = await program_service.get_list()
 
     assert len(programs) == EXPECTED_COUNT
-    transport_types = [p.type_transport for p in programs]
+    transport_types = [p.transfer_type for p in programs]
     assert "Паром" in transport_types
     assert "Самолет" in transport_types
     assert "Автобус" in transport_types

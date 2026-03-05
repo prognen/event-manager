@@ -13,10 +13,10 @@ async def test_update_non_existing_program_raises(
 ) -> None:
     fake_program = Program(
         program_id=999,
-        type_transport="Паром",
-        from_venue=Venue(venue_id=3, name="Санкт-Петербург"),
-        to_venue=Venue(venue_id=5, name="Екатеринбург"),
-        distance=100,
+        transfer_type="Паром",
+        start_venue=Venue(venue_id=3, name="Санкт-Петербург"),
+        end_venue=Venue(venue_id=5, name="Екатеринбург"),
+        transfer_duration_minutes=100,
         cost=50,
     )
 

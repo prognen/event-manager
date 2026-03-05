@@ -53,36 +53,36 @@ class ProgramService(IProgramService):
             logger.error("Не удалось удалить программу с ID %d", program_id)
             raise ValueError("Программу не получилось удалить.")
 
-    async def change_transport(
-        self, program_id: int, new_transport: str
+    async def change_transfer_type(
+        self, program_id: int, new_transfer_type: str
     ) -> Program | None:
         try:
             logger.debug(
                 "Изменение транспорта в программе %d на %s",
                 program_id,
-                new_transport,
+                new_transfer_type,
             )
-            return await self.repository.change_transport(program_id, new_transport)
+            return await self.repository.change_transfer_type(program_id, new_transfer_type)
         except Exception:
             logger.error("Не удалось изменить транспорт в программе %d", program_id)
             raise ValueError("Не получилось изменить транспорт.")
 
     async def get_by_venues(
-        self, from_venue_id: int, to_venue_id: int, transport: str
+        self, start_venue_id: int, end_venue_id: int, transfer_type: str
     ) -> Program | None:
         try:
             logger.debug(
                 "Поиск программы по площадкам %s и %s",
-                from_venue_id,
-                to_venue_id,
+                start_venue_id,
+                end_venue_id,
             )
             return await self.repository.get_by_venues(
-                from_venue_id, to_venue_id, transport
+                start_venue_id, end_venue_id, transfer_type
             )
         except Exception:
             logger.error(
                 "Не удалось найти программу по площадкам %s и %s",
-                from_venue_id,
-                to_venue_id,
+                start_venue_id,
+                end_venue_id,
             )
             raise ValueError("Программу не получилось найти.")

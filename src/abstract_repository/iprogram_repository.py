@@ -29,12 +29,12 @@ class IProgramRepository(ABC):
 
     @abstractmethod
     async def get_by_venues(
-        self, from_venue_id: int, to_venue_id: int, type_transport: str
+        self, start_venue_id: int, end_venue_id: int, transfer_type: str
     ) -> Program | None:
         pass
 
     @abstractmethod
-    async def change_transport(
-        self, program_id: int, new_transport: str
+    async def change_transfer_type(
+        self, program_id: int, new_transfer_type: str
     ) -> Program | None:
         pass

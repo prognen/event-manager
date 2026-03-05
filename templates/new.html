@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
@@ -120,7 +120,7 @@
           <div class="step active" id="step1">
             <p>1. Выберите площадку отправления</p>
             <div class="input-field">
-              <select name="from_venue" id="fromVenue" required>
+              <select name="start_venue" id="fromVenue" required>
                 <option value="" disabled selected>Выберите площадку</option>
                 {% for venue in venues %}
                   <option value="{{ venue.venue_id }}">{{ venue.name }}</option>
@@ -135,7 +135,7 @@
           <div class="step" id="step2">
             <p>2. Выберите площадку назначения</p>
             <div class="input-field">
-              <select name="to_venue" id="toVenue" required>
+              <select name="end_venue" id="toVenue" required>
                 <option value="" disabled selected>Выберите площадку</option>
                 {% for venue in venues %}
                   <option value="{{ venue.venue_id }}">{{ venue.name }}</option>
@@ -149,7 +149,7 @@
           <div class="step" id="step3">
             <p>3. Выберите транспорт</p>
             <div class="input-field">
-            <select name="transport" id="transportSelect" required>
+            <select name="transfer_type" id="transportSelect" required>
                 <option value="" disabled selected>Выберите транспорт</option>
                 <option value="Самолет">Самолет</option>
                 <option value="Поезд">Поезд</option>
@@ -214,7 +214,7 @@
           <div class="step" id="step7">
             <p>7. Проверьте данные и подтвердите создание</p>
             <div id="summaryData" class="card-panel teal lighten-5" style="padding: 20px; margin-bottom: 20px;">
-              <h5>Детали путешествия:</h5>
+              <h5>Детали программы участия:</h5>
               <div class="row">
                 <div class="col s6">
                   <p><strong>Площадка отправления:</strong> <span id="summaryFrom"></span></p>
@@ -373,8 +373,8 @@
             break;
             
         case 3:
-            const transport = document.querySelector('#transportSelect').value;
-            if (!transport) {
+            const transfer_type = document.querySelector('#transportSelect').value;
+            if (!transfer_type) {
                 showError('transportError', 'Пожалуйста, выберите транспорт');
             } else {
                 clearError('transportError');
@@ -415,14 +415,14 @@
         const transportSelect = document.querySelector('#transportSelect');
         const selectedTransport = transportSelect.options[transportSelect.selectedIndex]?.text || 'Не выбран';
         const summaryRow = document.querySelector('#summaryData .row');
-        const existingTransport = summaryRow.querySelector('p[data-summary="transport"]');
+        const existingTransport = summaryRow.querySelector('p[data-summary="transfer_type"]');
         if (existingTransport) {
         existingTransport.remove();
         }
 
         // Добавляем новый
         const transportPara = document.createElement('p');
-        transportPara.setAttribute('data-summary', 'transport');
+        transportPara.setAttribute('data-summary', 'transfer_type');
         transportPara.innerHTML = `<strong>Транспорт:</strong> ${selectedTransport}`;
         summaryRow.prepend(transportPara);
 

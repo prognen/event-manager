@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
@@ -120,29 +120,29 @@
   <!-- Основной контент -->
   <main>
     <div class="container">
-      <h3>Список Программаов Программаа</h3>
+      <h3>Список программ</h3>
       <table class="striped">
         <thead>
           <tr>
             <th>ID</th>
             <th>Тип транспорта</th>
             <th>Стоимость</th>
-            <th>Расстояние</th>
-            <th>Город отправления</th>
-            <th>Город назначения</th>
+            <th>Длительность, мин</th>
+            <th>Площадка отправления</th>
+            <th>Площадка назначения</th>
           </tr>
         </thead>
         <tbody>
           {% for program in programs %}
           <tr>
             <td>{{ program.id }}</td>
-            <td>{{ program.type_transport }}</td>
+            <td>{{ program.transfer_type }}</td>
             <td>{{ program.cost }}</td>
-            <td>{{ program.distance }}</td>
-            <td>{{ program.from_venue.name }}</td>
-            <td>{{ program.to_venue.name }}</td>
+            <td>{{ program.transfer_duration_minutes }}</td>
+            <td>{{ program.start_venue.name }}</td>
+            <td>{{ program.end_venue.name }}</td>
             <td>
-              <form method="post" action="/api/programs/delete/{{ program.id }}" onsubmit="return confirm('Удалить этот Программа?');">
+              <form method="post" action="/program/delete/{{ program.id }}" onsubmit="return confirm('Удалить эту программу?');">
                 <button type="submit" class="btn-flat" style="color: #888;">
                   <i class="material-icons">delete</i>
                 </button>
@@ -150,11 +150,11 @@
               <a href="#editModal" class="btn-flat edit-trigger" 
                 style="color: #888;"
                 data-id="{{ program.id }}"
-                data-type_transport="{{ program.type_transport }}"
+                data-transfer_type="{{ program.transfer_type }}"
                 data-cost="{{ program.cost }}"
-                data-distance="{{ program.distance }}"
-                data-from_venue="{{ program.from_venue }}"
-                data-to_venue="{{ program.to_venue }}">
+                data-transfer_duration_minutes="{{ program.transfer_duration_minutes }}"
+                data-start_venue="{{ program.start_venue }}"
+                data-end_venue="{{ program.end_venue }}">
                 <i class="material-icons">edit</i>
             </a>
             </td>
@@ -178,7 +178,7 @@
       <h4>Добавить программу</h4>
       <form id="addProgramForm">
         <div class="input-field">
-            <select id="type_transport" name="type_transport" required>
+            <select id="transfer_type" name="transfer_type" required>
                 <option value="" disabled selected>Выберите тип транспорта</option>
                 <option value="Автобус">Автобус</option>
                 <option value="Автомобиль">Автомобиль</option>
@@ -193,26 +193,26 @@
           <label>Стоимость</label>
         </div>
         <div class="input-field">
-          <input type="number" id="distance" name="distance" required />
-          <label>Расстояние</label>
+          <input type="number" id="transfer_duration_minutes" name="transfer_duration_minutes" required />
+          <label>Длительность, мин</label>
         </div>
         <div class="input-field">
-          <select id="from_venue" name="from_venue" required>
-            <option value="" disabled selected>Выберите город отправления</option>
+          <select id="start_venue" name="start_venue" required>
+            <option value="" disabled selected>Выберите площадку отправления</option>
             {% for venue in venues %}
               <option value="{{ venue.id }}">{{ venue.name }} </option>
             {% endfor %}
           </select>
-          <label>Город отправления</label>
+          <label>Площадка отправления</label>
         </div>
         <div class="input-field">
-            <select id="to_venue" name="to_venue" required>
-                <option value="" disabled selected>Выберите город назначения</option>
+            <select id="end_venue" name="end_venue" required>
+                <option value="" disabled selected>Выберите площадку назначения</option>
                 {% for venue in venues %}
                   <option value="{{ venue.id }}">{{ venue.name }} </option>
                 {% endfor %}
             </select>
-          <label>Город назначения</label>
+          <label>Площадка назначения</label>
         </div>
         <button type="submit" class="btn">Добавить</button>
       </form>
@@ -222,7 +222,7 @@
 <!-- Модальное окно для редактирования -->
 <div id="editModal" class="modal">
     <div class="modal-content">
-      <h4>Редактировать Программа</h4>
+      <h4>Редактировать программу</h4>
         <div class="input-field">
           <select id="editTypeTransport" name="editTypeTransport" required>
               <option value="" disabled selected>Выберите тип транспорта</option>
@@ -240,26 +240,26 @@
         <label for="editCost">Стоимость</label>
       </div>
       <div class="input-field">
-        <input id="editDistance" type="number">
-        <label for="editDistance">Расстояние</label>
+        <input id="editTransferDuration" type="number">
+        <label for="editTransferDuration">Длительность, мин</label>
       </div>
       <div class="input-field">
-        <select id="editfromCity" name="editfromCity" required>
-          <option value="" disabled selected>Выберите город отправления</option>
+        <select id="editStartVenue" name="editStartVenue" required>
+          <option value="" disabled selected>Выберите площадку отправления</option>
           {% for venue in venues %}
             <option value="{{ venue.id }}">{{ venue.name }} </option>
           {% endfor %}
         </select>
-        <label>Город отправления</label>
+        <label>Площадка отправления</label>
       </div>
       <div class="input-field">
-        <select id="editDestinationCity" name="editDestinationCity" required>
-            <option value="" disabled selected>Выберите город назначения</option>
+        <select id="editEndVenue" name="editEndVenue" required>
+            <option value="" disabled selected>Выберите площадку назначения</option>
             {% for venue in venues %}
               <option value="{{ venue.id }}">{{ venue.name }} </option>
             {% endfor %}
         </select>
-        <label>Город назначения</label>
+        <label>Площадка назначения</label>
       </div>
     </div>
     <div class="modal-footer">
@@ -298,27 +298,27 @@
       });
       $('.dropdown-trigger').dropdown();
       // Инициализация обычных селектов
-      let currentDRouteId = null; 
+      let currentProgramId = null; 
     
-      // Обработчик добавления Программаа
+      // Обработчик добавления программы
       $('#addProgramForm').submit(function (event) {
         event.preventDefault();
-        const type_transport = $('#type_transport').val();
+        const transfer_type = $('#transfer_type').val();
         const cost = $('#cost').val();
-        const distance = $('#distance').val();
-        const from_venue = $('#from_venue').val();
-        const to_venue = $('#to_venue').val();
+        const transfer_duration_minutes = $('#transfer_duration_minutes').val();
+        const start_venue = $('#start_venue').val();
+        const end_venue = $('#end_venue').val();
 
         // Создание объекта данных
         const formData = {
-          type_transport: type_transport,
+          transfer_type: transfer_type,
           cost: cost,
-          distance: distance,
-          from_venue: parseInt(from_venue),
-          to_venue: parseInt(to_venue)
+          transfer_duration_minutes: transfer_duration_minutes,
+          start_venue: parseInt(start_venue),
+          end_venue: parseInt(end_venue)
         };
-        if (!formData.type_transport || !formData.cost || !formData.distance || !formData.from_venue || !formData.to_venue) {
-          alert("Пожалуйста, выберите город назначения.");
+        if (!formData.transfer_type || !formData.cost || !formData.transfer_duration_minutes || !formData.start_venue || !formData.end_venue) {
+          alert("Пожалуйста, заполните все поля.");
           return;
         }
         
@@ -329,33 +329,33 @@
           data: JSON.stringify(formData),
           success: function () {
             $('#addProgramModal').modal('close');
-            alert("Программа успешно добавлен.");
+            alert("Программа успешно добавлена.");
             location.reload();
           },
           error: function (error) {
-            console.error('Ошибка при добавлении Программаа:', error);
-            alert('Ошибка при добавлении Программаа.');
+            console.error('Ошибка при добавлении программы:', error);
+            alert('Ошибка при добавлении программы.');
           }
         });
       });
       // Обработчик открытия редактирования
       $('.edit-trigger').on('click', function () {
-          currentDRouteId = $(this).data('id');
-          const routeData = $(this).data();
-          $('#editTypeTransport').val(routeData.type_transport);
-          $('#editCost').val(routeData.cost);
-          $('#editDistance').val(routeData.distance);
-          const parseCityData = (cityStr) => {
-            const idMatch = cityStr.match(/city_id=(\d+)/);
+          currentProgramId = $(this).data('id');
+          const programData = $(this).data();
+          $('#editTypeTransport').val(programData.transfer_type);
+          $('#editCost').val(programData.cost);
+          $('#editTransferDuration').val(programData.transfer_duration_minutes);
+          const parseVenueData = (cityStr) => {
+            const idMatch = cityStr.match(/venue_id=(\d+)/);
             return idMatch ? idMatch[1] : null;
           };
           
-          const fromCityId = parseCityData(routeData.from_venue);
-          const destinationCityId = parseCityData(routeData.to_venue);
+          const startVenueId = parseVenueData(programData.start_venue);
+          const endVenueId = parseVenueData(programData.end_venue);
           
-          // Устанавливаем значения для городов
-          $('#editfromCity').val(fromCityId);
-          $('#editDestinationCity').val(destinationCityId);
+          // Устанавливаем значения площадок
+          $('#editStartVenue').val(startVenueId);
+          $('#editEndVenue').val(endVenueId);
           
           $('select').formSelect();
           M.updateTextFields();
@@ -364,38 +364,38 @@
       });
 
       $('#saveEdit').on('click', function () {
-        const type_transport = $('#editTypeTransport').val();
+        const transfer_type = $('#editTypeTransport').val();
         const cost = $('#editCost').val();
-        const distance = $('#editDistance').val();
-        const from_venue = $('#editfromCity').val();
-        const to_venue = $('#editDestinationCity').val();
+        const transfer_duration_minutes = $('#editTransferDuration').val();
+        const start_venue = $('#editStartVenue').val();
+        const end_venue = $('#editEndVenue').val();
 
         const formData = {
-          type_transport: type_transport,
+          transfer_type: transfer_type,
           cost: cost,
-          distance: distance,
-          from_venue: parseInt(from_venue),
-          to_venue: parseInt(to_venue)
+          transfer_duration_minutes: transfer_duration_minutes,
+          start_venue: parseInt(start_venue),
+          end_venue: parseInt(end_venue)
         };
 
-        if (!formData.type_transport || !formData.cost || !formData.distance || !formData.from_venue || !formData.to_venue) {
+        if (!formData.transfer_type || !formData.cost || !formData.transfer_duration_minutes || !formData.start_venue || !formData.end_venue) {
           alert("Пожалуйста, заполните все поля.");
           return;
         }
 
         $.ajax({
-          url: `/api/programs/${currentDRouteId}`, 
+          url: `/api/programs/${currentProgramId}`, 
           type: 'PUT',
           contentType: 'application/json',
           data: JSON.stringify(formData),
           success: function () {
             $('#editModal').modal('close');
-            alert('Программа успешно обновлен.');
+            alert('Программа успешно обновлена.');
             location.reload();
           },
           error: function (error) {
-            console.error('Ошибка при обновлении Программаа:', error);
-            alert('Ошибка при обновлении Программаа.');
+            console.error('Ошибка при обновлении программы:', error);
+            alert('Ошибка при обновлении программы.');
           }
         });
       });
@@ -413,3 +413,6 @@
   
 </body>
 </html>
+
+
+

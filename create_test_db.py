@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from sqlalchemy import TIMESTAMP
 from sqlalchemy import Column
@@ -30,10 +30,10 @@ program = Table(
     "program",
     metadata,
     Column("id", Integer, primary_key=True),
-    Column("type_transport", String(100), nullable=False),
-    Column("from_venue", Integer, ForeignKey("event_db.venue.venue_id"), nullable=False),
-    Column("to_venue", Integer, ForeignKey("event_db.venue.venue_id"), nullable=False),
-    Column("distance", Integer, nullable=False),
+    Column("transfer_type", String(100), nullable=False),
+    Column("start_venue", Integer, ForeignKey("event_db.venue.venue_id"), nullable=False),
+    Column("end_venue", Integer, ForeignKey("event_db.venue.venue_id"), nullable=False),
+    Column("transfer_duration_minutes", Integer, nullable=False),
     Column("cost", Integer, nullable=False),
     schema="event_db",
 )
@@ -125,3 +125,4 @@ users_event = Table(
     Column("users_id", Integer, ForeignKey("event_db.users.id"), nullable=False),
     schema="event_db",
 )
+

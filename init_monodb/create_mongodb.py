@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from typing import Any
 
@@ -92,11 +92,11 @@ class PostgreSQLToMongoMigrator:
             db.users.insert_many(users)
 
     async def _migrate_programs(self, session: AsyncSession, db: MongoDB) -> None:
-        """Миграция программ маршрутов"""
+        """Миграция программ перемещения"""
         result = await session.execute(
             text(
                 """
-            SELECT id, type_transport, from_venue, to_venue, distance, cost
+            SELECT id, transfer_type, start_venue, end_venue, transfer_duration_minutes, cost
             FROM program
         """
             )
@@ -104,10 +104,10 @@ class PostgreSQLToMongoMigrator:
         programs: list[dict[str, Any]] = [
             {
                 "_id": row[0],
-                "type_transport": row[1],
-                "from_venue_id": row[2],
-                "to_venue_id": row[3],
-                "distance": row[4],
+                "transfer_type": row[1],
+                "start_venue_id": row[2],
+                "end_venue_id": row[3],
+                "transfer_duration_minutes": row[4],
                 "cost": row[5],
             }
             for row in result.fetchall()
@@ -262,10 +262,10 @@ class PostgreSQLToMongoMigrator:
                     "_id": row[0],
                     "program": {
                         "_id": program_data[0],
-                        "type_transport": program_data[1],
-                        "from_venue_id": program_data[2],
-                        "to_venue_id": program_data[3],
-                        "distance": program_data[4],
+                        "transfer_type": program_data[1],
+                        "start_venue_id": program_data[2],
+                        "end_venue_id": program_data[3],
+                        "transfer_duration_minutes": program_data[4],
                         "cost": program_data[5],
                     },
                     "event": event_data,
@@ -285,7 +285,7 @@ class PostgreSQLToMongoMigrator:
         db.users.create_index("login", unique=True)
         db.users.create_index("passport", unique=True)
         db.users.create_index("phone", unique=True)
-        db.programs.create_index([("from_venue_id", 1), ("to_venue_id", 1)])
+        db.programs.create_index([("start_venue_id", 1), ("end_venue_id", 1)])
 
 
 async def async_init_mongodb() -> None:
@@ -295,3 +295,4 @@ async def async_init_mongodb() -> None:
 
     migrator = PostgreSQLToMongoMigrator(pg_async_url, mongo_uri)
     await migrator.migrate()
+

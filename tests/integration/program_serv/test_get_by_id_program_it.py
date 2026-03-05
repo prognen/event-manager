@@ -13,7 +13,7 @@ async def test_get_program_by_id_success(
 
     assert program is not None
     assert program.program_id == 1
-    assert program.type_transport in {"Паром", "Самолет", "Автобус"}
+    assert program.transfer_type in {"Паром", "Самолет", "Автобус"}
 
 
 

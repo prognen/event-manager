@@ -26,11 +26,11 @@ class ProgramController:
         try:
             data = await request.json()
             data["program_id"] = 1
-            data["from_venue"] = await self.venue_service.get_by_id(
-                data["from_venue"]
+            data["start_venue"] = await self.venue_service.get_by_id(
+                data["start_venue"]
             )
-            data["to_venue"] = await self.venue_service.get_by_id(
-                data["to_venue"]
+            data["end_venue"] = await self.venue_service.get_by_id(
+                data["end_venue"]
             )
             program = Program(**data)
             await self.program_service.add(program)
@@ -48,11 +48,11 @@ class ProgramController:
         try:
             data = await request.json()
             data["program_id"] = program_id
-            data["from_venue"] = await self.venue_service.get_by_id(
-                data["from_venue"]
+            data["start_venue"] = await self.venue_service.get_by_id(
+                data["start_venue"]
             )
-            data["to_venue"] = await self.venue_service.get_by_id(
-                data["to_venue"]
+            data["end_venue"] = await self.venue_service.get_by_id(
+                data["end_venue"]
             )
             program = Program(**data)
             await self.program_service.update(program)
@@ -80,11 +80,11 @@ class ProgramController:
                 return {
                     "program": {
                         "id": program.program_id,
-                        "type_transport": program.type_transport,
+                        "transfer_type": program.transfer_type,
                         "cost": program.cost,
-                        "distance": program.distance,
-                        "from_venue": program.from_venue,
-                        "to_venue": program.to_venue,
+                        "transfer_duration_minutes": program.transfer_duration_minutes,
+                        "start_venue": program.start_venue,
+                        "end_venue": program.end_venue,
                     }
                 }
             logger.warning("Программа ID %d не найдена", program_id)
@@ -105,11 +105,11 @@ class ProgramController:
                 "programs": [
                     {
                         "id": p.program_id,
-                        "type_transport": p.type_transport,
+                        "transfer_type": p.transfer_type,
                         "cost": p.cost,
-                        "distance": p.distance,
-                        "from_venue": p.from_venue,
-                        "to_venue": p.to_venue,
+                        "transfer_duration_minutes": p.transfer_duration_minutes,
+                        "start_venue": p.start_venue,
+                        "end_venue": p.end_venue,
                     }
                     for p in program_list
                 ]

@@ -54,7 +54,7 @@ class SessionService(ISessionService):
             raise ValueError("Сессия не найдена.")
 
     async def insert_venue_after(
-        self, event_id: int, new_venue_id: int, after_venue_id: int, transport: str
+        self, event_id: int, new_venue_id: int, after_venue_id: int, transfer_type: str
     ) -> None:
         try:
             logger.debug(
@@ -64,7 +64,7 @@ class SessionService(ISessionService):
                 event_id,
             )
             await self.repository.insert_venue_after(
-                event_id, new_venue_id, after_venue_id, transport
+                event_id, new_venue_id, after_venue_id, transfer_type
             )
         except Exception:
             logger.error("Не удалось добавить площадку %d в сессию", new_venue_id)
@@ -78,15 +78,15 @@ class SessionService(ISessionService):
             logger.error("Не удалось удалить площадку %d из сессии", venue_id)
             raise ValueError("Площадку не получилось удалить из сессии.")
 
-    async def change_transport(
-        self, program_id: int, session_id: int, new_transport: str
+    async def change_transfer_type(
+        self, program_id: int, session_id: int, new_transfer_type: str
     ) -> Session | None:
         try:
             logger.debug(
-                "Изменение транспорта в сессии %d на %s", session_id, new_transport
+                "Изменение транспорта в сессии %d на %s", session_id, new_transfer_type
             )
-            return await self.repository.change_transport(
-                program_id, session_id, new_transport
+            return await self.repository.change_transfer_type(
+                program_id, session_id, new_transfer_type
             )
         except Exception:
             logger.error("Не удалось изменить транспорт в сессии %d", session_id)

@@ -258,11 +258,11 @@ class EventRepository(IEventRepository):
             if "end_time" in event_dict:
                 query["sessions.end_time"] = {"$lte": event_dict["end_time"]}
 
-            if "from_venue" in event_dict:
-                query["sessions.program.from_venue_id"] = event_dict["from_venue"]
+            if "start_venue" in event_dict:
+                query["sessions.program.start_venue_id"] = event_dict["start_venue"]
 
-            if "to_venue" in event_dict:
-                query["sessions.program.to_venue_id"] = event_dict["to_venue"]
+            if "end_venue" in event_dict:
+                query["sessions.program.end_venue_id"] = event_dict["end_venue"]
 
             if "activity_type" in event_dict:
                 query["activities.activity_type"] = {

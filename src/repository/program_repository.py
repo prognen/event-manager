@@ -27,15 +27,15 @@ class ProgramRepository(IProgramRepository):
             result = await self.session.execute(query)
             programs = []
             for row in result.mappings():
-                from_venue = await self.venue_repo.get_by_id(row["from_venue"]) if row["from_venue"] else None
-                to_venue = await self.venue_repo.get_by_id(row["to_venue"]) if row["to_venue"] else None
+                start_venue = await self.venue_repo.get_by_id(row["start_venue"]) if row["start_venue"] else None
+                end_venue = await self.venue_repo.get_by_id(row["end_venue"]) if row["end_venue"] else None
                 programs.append(Program(
                     program_id=row["id"],
-                    type_transport=row["type_transport"],
+                    transfer_type=row["transfer_type"],
                     cost=row["cost"],
-                    distance=row["distance"],
-                    from_venue=from_venue,
-                    to_venue=to_venue,
+                    transfer_duration_minutes=row["transfer_duration_minutes"],
+                    start_venue=start_venue,
+                    end_venue=end_venue,
                 ))
             logger.debug("Успешно получено %d программ", len(programs))
             return programs
@@ -49,16 +49,16 @@ class ProgramRepository(IProgramRepository):
             result = await self.session.execute(query, {"program_id": program_id})
             row = result.mappings().first()
             if row:
-                from_venue = await self.venue_repo.get_by_id(row["from_venue"]) if row["from_venue"] else None
-                to_venue = await self.venue_repo.get_by_id(row["to_venue"]) if row["to_venue"] else None
+                start_venue = await self.venue_repo.get_by_id(row["start_venue"]) if row["start_venue"] else None
+                end_venue = await self.venue_repo.get_by_id(row["end_venue"]) if row["end_venue"] else None
                 logger.debug("Найдена программа ID %d", program_id)
                 return Program(
                     program_id=row["id"],
-                    type_transport=row["type_transport"],
+                    transfer_type=row["transfer_type"],
                     cost=row["cost"],
-                    distance=row["distance"],
-                    from_venue=from_venue,
-                    to_venue=to_venue,
+                    transfer_duration_minutes=row["transfer_duration_minutes"],
+                    start_venue=start_venue,
+                    end_venue=end_venue,
                 )
             logger.warning("Программа с ID %d не найдена", program_id)
             return None
@@ -68,16 +68,16 @@ class ProgramRepository(IProgramRepository):
 
     async def add(self, program: Program) -> Program:
         query = text("""
-            INSERT INTO program (type_transport, from_venue, to_venue, distance, cost)
-            VALUES (:type_transport, :from_venue, :to_venue, :distance, :cost)
+            INSERT INTO program (transfer_type, start_venue, end_venue, transfer_duration_minutes, cost)
+            VALUES (:transfer_type, :start_venue, :end_venue, :transfer_duration_minutes, :cost)
             RETURNING id
         """)
         try:
             result = await self.session.execute(query, {
-                "type_transport": program.type_transport,
-                "from_venue": program.from_venue.venue_id if program.from_venue else None,
-                "to_venue": program.to_venue.venue_id if program.to_venue else None,
-                "distance": program.distance,
+                "transfer_type": program.transfer_type,
+                "start_venue": program.start_venue.venue_id if program.start_venue else None,
+                "end_venue": program.end_venue.venue_id if program.end_venue else None,
+                "transfer_duration_minutes": program.transfer_duration_minutes,
                 "cost": program.cost,
             })
             new_id = result.scalar_one()
@@ -97,19 +97,19 @@ class ProgramRepository(IProgramRepository):
     async def update(self, update_program: Program) -> None:
         query = text("""
             UPDATE program
-            SET type_transport = :type_transport,
-                from_venue = :from_venue,
-                to_venue = :to_venue,
-                distance = :distance,
+            SET transfer_type = :transfer_type,
+                start_venue = :start_venue,
+                end_venue = :end_venue,
+                transfer_duration_minutes = :transfer_duration_minutes,
                 cost = :cost
             WHERE id = :program_id
         """)
         try:
             result = await self.session.execute(query, {
-                "type_transport": update_program.type_transport,
-                "from_venue": update_program.from_venue.venue_id if update_program.from_venue else None,
-                "to_venue": update_program.to_venue.venue_id if update_program.to_venue else None,
-                "distance": update_program.distance,
+                "transfer_type": update_program.transfer_type,
+                "start_venue": update_program.start_venue.venue_id if update_program.start_venue else None,
+                "end_venue": update_program.end_venue.venue_id if update_program.end_venue else None,
+                "transfer_duration_minutes": update_program.transfer_duration_minutes,
                 "cost": update_program.cost,
                 "program_id": update_program.program_id,
             })
@@ -136,47 +136,47 @@ class ProgramRepository(IProgramRepository):
             raise
 
     async def get_by_venues(
-        self, from_venue_id: int, to_venue_id: int, type_transport: str
+        self, start_venue_id: int, end_venue_id: int, transfer_type: str
     ) -> Program | None:
         query = text("""
             SELECT * FROM program
-            WHERE from_venue = :from_id AND to_venue = :to_id AND type_transport = :type_transport
+            WHERE start_venue = :from_id AND end_venue = :to_id AND transfer_type = :transfer_type
         """)
         try:
             result = await self.session.execute(query, {
-                "from_id": from_venue_id,
-                "to_id": to_venue_id,
-                "type_transport": type_transport,
+                "from_id": start_venue_id,
+                "to_id": end_venue_id,
+                "transfer_type": transfer_type,
             })
             row = result.mappings().first()
             if row:
-                from_venue = await self.venue_repo.get_by_id(row["from_venue"])
-                to_venue = await self.venue_repo.get_by_id(row["to_venue"])
+                start_venue = await self.venue_repo.get_by_id(row["start_venue"])
+                end_venue = await self.venue_repo.get_by_id(row["end_venue"])
                 logger.debug("Найдена программа ID %d", row["id"])
                 return Program(
                     program_id=row["id"],
-                    type_transport=type_transport,
+                    transfer_type=transfer_type,
                     cost=row["cost"],
-                    distance=row["distance"],
-                    from_venue=from_venue,
-                    to_venue=to_venue,
+                    transfer_duration_minutes=row["transfer_duration_minutes"],
+                    start_venue=start_venue,
+                    end_venue=end_venue,
                 )
-            logger.warning("Программа между площадками %d и %d не найдена", from_venue_id, to_venue_id)
+            logger.warning("Программа между площадками %d и %d не найдена", start_venue_id, end_venue_id)
             return None
         except SQLAlchemyError:
             logger.error("Ошибка при получении программы по площадкам")
         return None
 
-    async def change_transport(self, program_id: int, new_transport: str) -> Program | None:
+    async def change_transfer_type(self, program_id: int, new_transfer_type: str) -> Program | None:
         current = await self.get_by_id(program_id)
         if not current:
             logger.warning("Программа с ID %d не найдена", program_id)
             return None
-        if not current.from_venue or not current.to_venue:
+        if not current.start_venue or not current.end_venue:
             logger.warning("Площадки в программе с ID %d не найдены", program_id)
             return None
         return await self.get_by_venues(
-            from_venue_id=current.from_venue.venue_id,
-            to_venue_id=current.to_venue.venue_id,
-            type_transport=new_transport,
+            start_venue_id=current.start_venue.venue_id,
+            end_venue_id=current.end_venue.venue_id,
+            transfer_type=new_transfer_type,
         )

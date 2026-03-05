@@ -102,7 +102,7 @@
     .input-field input {
         padding-top: 1.5rem;  /* Место для метки */
     }
-    .transport-badge {
+    .transfer_type-badge {
       display: inline-block;
       padding: 0 5px;
       background-color: #e3f2fd;
@@ -167,12 +167,12 @@
                 <h4>Редактирование сессии 
                   {% if session_parts %}
                     {% for part in session_parts %}
-                      {{ part.from_venue.name }}
+                      {{ part.start_venue.name }}
                       {% if not loop.last %} → {% endif %}
                     {% endfor %}
-                    → {{ session_parts[-1].to_venue.name }}
+                    → {{ session_parts[-1].end_venue.name }}
                   {% else %}
-                    (маршрут не задан)
+                    (Программа не задана)
                   {% endif %}
                 </h4>
                 <span class="badge blue white-text">ID: {{ session.session_id }}</span>
@@ -182,7 +182,7 @@
             <div class="row">
               <div class="col s12 m6">
                 <p><strong>Даты:</strong> {{ session.start_time.strftime('%d.%m.%Y') }} - {{ session.end_time.strftime('%d.%m.%Y') }}</p>
-                <p><strong>Транспорт:</strong> {{ session.transport }}</p>
+                <p><strong>Транспорт:</strong> {{ session.transfer_type }}</p>
               </div>
               <div class="col s12 m6">
                 <p><strong>Общая стоимость:</strong> {{ session.cost }} руб.</p>
@@ -284,7 +284,7 @@
               </div>
             </div>
           </div>
-          <!-- Секция изменения маршрута -->
+          <!-- Секция изменения программы -->
           <div class="edit-card">
             <div class="action-section">
               <h5><i class="material-icons left">map</i> Изменение программы</h5>
@@ -293,7 +293,7 @@
                 <div class="action-card center-align">
                   <i class="material-icons">directions_transit</i>
                   <h6>Изменить транспорт</h6>
-                  <a href="#change-transport-modal" class="btn waves-effect waves-light blue modal-trigger">
+                  <a href="#change-transfer_type-modal" class="btn waves-effect waves-light blue modal-trigger">
                     Изменить
                   </a>
                 </div>
@@ -324,7 +324,7 @@
             <div class="action-section">
               <h5><i class="material-icons left">settings</i> Управление сессией</h5>
               <div class="action-grid">
-                <!-- Кнопка продления путешествия -->
+                <!-- Кнопка продления программы -->
                 <div class="action-card center-align">
                     <i class="material-icons">calendar_today</i>
                     <h6>Продлить сессию</h6>
@@ -340,7 +340,7 @@
                   </a>
                 </div>
                 
-                <!-- Кнопка удаления путешествия -->
+                <!-- Кнопка удаления программы -->
                 <div class="action-card center-align">
                     <i class="material-icons">delete</i>
                     <h6>Удалить сессию</h6>
@@ -359,12 +359,12 @@
 
   <!-- Модальные окна -->
   <!-- Модальное окно изменения транспорта -->
-<div id="change-transport-modal" class="modal">
+<div id="change-transfer_type-modal" class="modal">
     <div class="modal-content">
       <h4>Изменение транспорта</h4>
-      <form id="transport-form">
+      <form id="transfer_type-form">
         <div class="input-field">
-          <select id="transport-select" required>
+          <select id="transfer_type-select" required>
             <option value="" disabled selected>Выберите транспорт</option>
             <option value="Самолет">Самолет</option>
             <option value="Поезд">Поезд</option>
@@ -379,26 +379,26 @@
     </div>
     <div class="modal-footer">
       <a href="#!" class="modal-close waves-effect waves-green btn-flat">Отмена</a>
-      <button type="submit" form="transport-form" class="waves-effect waves-green btn blue">Сохранить</button>
+      <button type="submit" form="transfer_type-form" class="waves-effect waves-green btn blue">Сохранить</button>
     </div>
 </div>
 
 <!-- Модальное окно удаления города -->
 <div id="remove-venue-modal" class="modal">
   <div class="modal-content">
-    <h4>Удаление площадки из маршрута</h4>
+    <h4>Удаление площадки из программы</h4>
     
-    <!-- Отображение текущего маршрута -->
-    <div class="current-route-section">
-      <h5>Текущий маршрут:</h5>
-      <div class="route-path">
+    <!-- Отображение текущей программы -->
+    <div class="current-session-section">
+      <h5>Текущая программа:</h5>
+      <div class="session-path">
         {% if session_parts %}
-          {{ session_parts[0].from_venue.name }}
+          {{ session_parts[0].start_venue.name }}
           {% for part in session_parts %}
-            → {{ part.to_venue.name }}
+            → {{ part.end_venue.name }}
           {% endfor %}
         {% else %}
-          маршрут не задан
+          Программа не задана
         {% endif %}
       </div>
     </div>
@@ -411,22 +411,22 @@
           <option value="" disabled selected>Выберите город для удаления</option>
           {% if session_parts %}
             <!-- Для первого города (только отправления) -->
-            <option value="{{ session_parts[0].from_venue.venue_id }}">
-              {{ session_parts[0].from_venue.name }} (начальная точка)
+            <option value="{{ session_parts[0].start_venue.venue_id }}">
+              {{ session_parts[0].start_venue.name }} (начальная точка)
             </option>
             
             <!-- Для промежуточных городов (только пункты назначения) -->
             {% for part in session_parts %}
               {% if not loop.last %}
-                <option value="{{ part.to_venue.venue_id }}">
-                  {{ part.to_venue.name }}
+                <option value="{{ part.end_venue.venue_id }}">
+                  {{ part.end_venue.name }}
                 </option>
               {% endif %}
             {% endfor %}
             
             <!-- Для последнего города -->
-            <option value="{{ session_parts[-1].to_venue.venue_id }}">
-              {{ session_parts[-1].to_venue.name }} (конечная точка)
+            <option value="{{ session_parts[-1].end_venue.venue_id }}">
+              {{ session_parts[-1].end_venue.name }} (конечная точка)
             </option>
           {% endif %}
         </select>
@@ -437,7 +437,7 @@
         <p>
           <label>
             <input type="checkbox" name="keep_segments" class="filled-in" checked="checked" />
-            <span>Сохранить сегменты маршрута (если возможно)</span>
+            <span>Сохранить сегменты программы (если возможно)</span>
           </label>
         </p>
       </div>
@@ -449,7 +449,7 @@
   </div>
 </div>
 
-<!-- Модальное окно продления путешествия -->
+<!-- Модальное окно продления программы -->
 <div id="extend-session-modal" class="modal">
     <div class="modal-content">
         <h4>Продление сессии</h4>
@@ -458,7 +458,7 @@
                 <input type="text" id="new-end-date" class="datepicker">
                 <label for="new-end-date">Новая дата окончания</label>
             </div>
-            <input type="hidden" name="route_id" value="{{ session.session_id }}">
+            <input type="hidden" name="session_id" value="{{ session.session_id }}">
         </form>
     </div>
     <div class="modal-footer">
@@ -651,19 +651,19 @@
 
 <div id="add-venue-modal" class="modal">
     <div class="modal-content">
-      <h4>Добавление площадки в маршрут</h4>
+      <h4>Добавление площадки в программу</h4>
       
-      <!-- Отображение текущего маршрута -->
-      <div class="current-route-section">
-        <h5>Текущий маршрут:</h5>
-        <div class="route-path">
+      <!-- Отображение текущей программы -->
+      <div class="current-session-section">
+        <h5>Текущая программа:</h5>
+        <div class="session-path">
           {% if session_parts %}
-            {{ session_parts[0].from_venue.name }}
+            {{ session_parts[0].start_venue.name }}
             {% for part in session_parts %}
-              → {{ part.to_venue.name }}
+              → {{ part.end_venue.name }}
             {% endfor %}
           {% else %}
-            маршрут не задан
+            Программа не задана
           {% endif %}
         </div>
       </div>
@@ -675,13 +675,13 @@
           <select name="new_venue_id" id="new-venue-select" required>
             <option value="" disabled selected>Выберите город</option>
             {% for venue in venues %}
-              {% set city_in_route = false %}
-              {% for route_part in session_parts %}
-                {% if venue.id == route_part.from_venue.venue_id or venue.id == route_part.to_venue.venue_id %}
-                  {% set city_in_route = true %}
+              {% set city_in_session = false %}
+              {% for session_part in session_parts %}
+                {% if venue.id == session_part.start_venue.venue_id or venue.id == session_part.end_venue.venue_id %}
+                  {% set city_in_session = true %}
                 {% endif %}
               {% endfor %}
-              {% if not city_in_route %}
+              {% if not city_in_session %}
                 <option value="{{ venue.id }}">{{ venue.name }}</option>
               {% endif %}
             {% endfor %}
@@ -692,22 +692,22 @@
         <div class="input-field">
           <select name="after_venue_id" id="after-venue-select" required>
             <option value="" disabled selected>Выберите после какого города</option>
-            {% for route_part in session_parts %}
-              <option value="{{ route_part.from_venue.venue_id }}">
-                После {{ route_part.from_venue.name }}
+            {% for session_part in session_parts %}
+              <option value="{{ session_part.start_venue.venue_id }}">
+                После {{ session_part.start_venue.name }}
               </option>
               {% if loop.last %}
-                <option value="{{ route_part.to_venue.venue_id }}">
-                  После {{ route_part.to_venue.name }} (конец маршрута)
+                <option value="{{ session_part.end_venue.venue_id }}">
+                  После {{ session_part.end_venue.name }} (конец программы)
                 </option>
               {% endif %}
             {% endfor %}
           </select>
-          <label>Позиция в маршруте</label>
+          <label>Позиция в программе</label>
         </div>
         
         <div class="input-field">
-          <select name="transport" id="city-transport-select" required>
+          <select name="transfer_type" id="city-transfer_type-select" required>
             <option value="" disabled selected>Выберите транспорт</option>
             <option value="Самолет">Самолет</option>
             <option value="Поезд">Поезд</option>
@@ -779,7 +779,7 @@
             e.preventDefault();
             
             var newEndDate = $('#new-end-date').val();
-            var routeId = "{{ session.session_id }}";
+            var sessionId = "{{ session.session_id }}";
             
             if (!newEndDate) {
             alert('Пожалуйста, выберите новую дату окончания');
@@ -795,7 +795,7 @@
 
             // Отправка данных на сервер
             $.ajax({
-            url: '/session/extend/' + routeId,
+            url: '/session/extend/' + sessionId,
             method: 'PUT',
             contentType: 'application/json',
             data: JSON.stringify({
@@ -848,7 +848,7 @@
         
         if (confirm('Вы уверены, что хотите удалить это развлечение?')) {
             $.ajax({
-                url: `/session/activity/delete/${id}?route_id={{ session.session_id }}`,
+                url: `/session/activity/delete/${id}?session_id={{ session.session_id }}`,
                 type: 'DELETE',
                 success: function() {
                   const entName = $(this).closest('.card-panel').find('strong').text();
@@ -898,7 +898,7 @@
         
         if (confirm('Вы уверены, что хотите удалить это размещение?')) {
             $.ajax({
-                url: `/session/lodging/delete/${id}?route_id={{ session.session_id }}`,
+                url: `/session/lodging/delete/${id}?session_id={{ session.session_id }}`,
                 type: 'DELETE',
                 success: function() {
                     window.location.reload();
@@ -909,32 +909,32 @@
             });
         }
       });
-      $('#transport-form').on('submit', function(e) {
+      $('#transfer_type-form').on('submit', function(e) {
         e.preventDefault();
         
-        const transport = $('#transport-select').val();
+        const transfer_type = $('#transfer_type-select').val();
         const program_id = parseInt($('#program_id').val());
         
-        if (!transport) {
+        if (!transfer_type) {
             alert('Пожалуйста, выберите транспорт');
             return;
         }
         const formData = {
-            transport: transport,
+            transfer_type: transfer_type,
             program_id: program_id
         };
 
         $.ajax({
-            url: `/session/change_transport/{{ session.session_id }}`,
+            url: `/session/change_transfer_type/{{ session.session_id }}`,
             type: 'PUT',
             contentType: 'application/json',
             data: JSON.stringify(formData),
             success: function(response) {
               console.log('Ответ сервера:', response);
               alert("Транспорт успешно изменен");
-              $('#change-transport-modal').modal('close');
-              addHistoryEntry('update', 'транспорт', $('#transport-select').val(), {
-                description: 'Изменен транспорт для всего маршрута'
+              $('#change-transfer_type-modal').modal('close');
+              addHistoryEntry('update', 'транспорт', $('#transfer_type-select').val(), {
+                description: 'Изменен транспорт для всей программы'
               });
               window.location.reload();
             },
@@ -944,11 +944,11 @@
             }
         });
         });
-      $('#change-transport-modal').modal({
+      $('#change-transfer_type-modal').modal({
         onOpenStart: function() {
-            const currentTransport = "{{ session.transport }}";
-            $('#transport-select').val(currentTransport);
-            M.FormSelect.init($('#transport-select'));
+            const currentTransport = "{{ session.transfer_type }}";
+            $('#transfer_type-select').val(currentTransport);
+            M.FormSelect.init($('#transfer_type-select'));
         }
       });
       $(document).on('click', '.edit-lodging', function(e) {
@@ -1142,8 +1142,8 @@ $(document).ready(function() {
     $('#add-venue-modal').modal({
       onOpenStart: function() {
         // При открытии модального окна сбрасываем значения
-        $('#new-venue-select, #after-venue-select, #city-transport-select').val('');
-        M.FormSelect.init($('#new-venue-select, #after-venue-select, #city-transport-select'));
+        $('#new-venue-select, #after-venue-select, #city-transfer_type-select').val('');
+        M.FormSelect.init($('#new-venue-select, #after-venue-select, #city-transfer_type-select'));
       }
     });
     $('#add-venue-form').on('submit', function(e) {
@@ -1153,13 +1153,13 @@ $(document).ready(function() {
         event_id: $('input[name="event_id"]').val(),
         new_venue_id: $('#new-venue-select').val(),
         after_venue_id: $('#after-venue-select').val(),
-        transport: $('#city-transport-select').val()
+        transfer_type: $('#city-transfer_type-select').val()
       };
       const currentCities = [];
-      {% for route_part in session_parts %}
-        currentCities.push({{ route_part.from_venue.venue_id }});
+      {% for session_part in session_parts %}
+        currentCities.push({{ session_part.start_venue.venue_id }});
           {% if loop.last %}
-            currentCities.push({{ route_part.to_venue.venue_id }});
+            currentCities.push({{ session_part.end_venue.venue_id }});
           {% endif %}
       {% endfor %}
       if (currentCities.includes(parseInt(formData.new_venue_id))) {
@@ -1221,7 +1221,7 @@ $('#remove-venue-form').on('submit', function(e) {
       keep_segments: keepSegments
     }),
     success: function(response) {
-      M.toast({html: 'Площадка успешно удалена из маршрута!', classes: 'green'});
+      M.toast({html: 'Площадка успешно удалена из программы!', classes: 'green'});
       $('#remove-venue-modal').modal('close');
       addHistoryEntry('remove', 'город', $('#venue-to-remove option:selected').text(), {
         description: keepSegments ? 'С сохранением сегментов' : 'Без сохранения сегментов'
@@ -1277,14 +1277,14 @@ function renderHistory() {
   try {
     const historyStr = localStorage.getItem('eventHistory');
     const history = historyStr ? JSON.parse(historyStr) : [];
-    const currentRouteId = "{{ session.session_id }}"; // Например, 9
+    const currentSessionId = "{{ session.session_id }}"; // Например, 9
 
-    console.log("Текущий routeId:", currentRouteId);
+    console.log("Текущий sessionId:", currentSessionId);
     console.log("Все записи:", history);
 
-    // Фильтруем записи по routeId (сравниваем как строки)
+    // Фильтруем записи по sessionId (сравниваем как строки)
     const filteredHistory = history.filter(item => 
-      String(item.routeId) === String(currentRouteId)
+      String(item.sessionId) === String(currentSessionId)
     );
 
     console.log("Отфильтрованные записи:", filteredHistory);
@@ -1337,7 +1337,7 @@ $('#history-modal').modal({
 $('#clear-history').on('click', function() {
   if (confirm('Вы уверены, что хотите очистить историю изменений?')) {
     const history = JSON.parse(localStorage.getItem('eventHistory')) || [];
-    const filteredHistory = history.filter(item => item.routeId !== "{{ session.session_id }}");
+    const filteredHistory = history.filter(item => item.sessionId !== "{{ session.session_id }}");
     localStorage.setItem('eventHistory', JSON.stringify(filteredHistory));
     renderHistory();
   }
@@ -1346,3 +1346,6 @@ $('#clear-history').on('click', function() {
   </script>
 </body>
 </html>
+
+
+

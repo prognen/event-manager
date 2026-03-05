@@ -226,12 +226,12 @@ class EventRepository(IEventRepository):
         if "end_time" in event_dict:
             sql += " AND s.end_time <= :end_time"
             params["end_time"] = event_dict["end_time"]
-        if "from_venue" in event_dict:
-            sql += " AND p.from_venue = :from_venue"
-            params["from_venue"] = event_dict["from_venue"]
-        if "to_venue" in event_dict:
-            sql += " AND p.to_venue = :to_venue"
-            params["to_venue"] = event_dict["to_venue"]
+        if "start_venue" in event_dict:
+            sql += " AND p.start_venue = :start_venue"
+            params["start_venue"] = event_dict["start_venue"]
+        if "end_venue" in event_dict:
+            sql += " AND p.end_venue = :end_venue"
+            params["end_venue"] = event_dict["end_venue"]
         try:
             result = await self.session.execute(text(sql), params)
             events = []

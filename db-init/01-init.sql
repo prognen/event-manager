@@ -6,13 +6,13 @@ CREATE TABLE if not exists event_db.venue (
 
 CREATE TABLE IF NOT EXISTS event_db.program (
     id SERIAL PRIMARY KEY,
-    type_transport VARCHAR(100) NOT NULL,
-    from_venue INT NOT NULL,
-    to_venue INT NOT NULL,
-    distance INT NOT NULL,
+    transfer_type VARCHAR(100) NOT NULL,
+    start_venue INT NOT NULL,
+    end_venue INT NOT NULL,
+    transfer_duration_minutes INT NOT NULL,
     cost INT NOT NULL,
-    CONSTRAINT fk_from_venue FOREIGN KEY (from_venue) REFERENCES event_db.venue(venue_id) ON DELETE CASCADE,
-    CONSTRAINT fk_to_venue FOREIGN KEY (to_venue) REFERENCES event_db.venue(venue_id) ON DELETE CASCADE
+    CONSTRAINT fk_start_venue FOREIGN KEY (start_venue) REFERENCES event_db.venue(venue_id) ON DELETE CASCADE,
+    CONSTRAINT fk_end_venue FOREIGN KEY (end_venue) REFERENCES event_db.venue(venue_id) ON DELETE CASCADE
 );
 
 CREATE TABLE if not exists event_db.users (

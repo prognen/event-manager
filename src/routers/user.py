@@ -143,9 +143,9 @@ def _session_to_profile_dict(session: Session) -> dict[str, Any]:
     program = session.program
     event = session.event
     destination_venue = (
-        program.to_venue.name if program and program.to_venue else ""
+        program.end_venue.name if program and program.end_venue else ""
     )
-    transport = program.type_transport if program else ""
+    transfer_type = program.transfer_type if program else ""
     cost = program.cost if program else 0
     return {
         "session_id": session.session_id,
@@ -153,7 +153,7 @@ def _session_to_profile_dict(session: Session) -> dict[str, Any]:
         "destination_venue": destination_venue,
         "start_time": session.start_time,
         "end_time": session.end_time,
-        "transport": transport,
+        "transfer_type": transfer_type,
         "cost": cost,
         "users": event.users if event else [],
         "activities": event.activities if event else [],

@@ -52,15 +52,15 @@ class SessionController:
                 )
 
             program = await self.program_service.get_by_venues(
-                int(data["from_venue"]),
-                int(data["to_venue"]),
-                data["transport"],
+                int(data["start_venue"]),
+                int(data["end_venue"]),
+                data["transfer_type"],
             )
 
             if not program:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Программа между площадками {data['from_venue']} и {data['to_venue']} не найдена",
+                    detail=f"Программа между площадками {data['start_venue']} и {data['end_venue']} не найдена",
                 )
 
             data["program"] = program
@@ -127,14 +127,14 @@ class SessionController:
             event_id = int(data.get("event_id"))
             new_venue_id = int(data.get("new_venue_id"))
             after_venue_id = int(data.get("after_venue_id"))
-            transport = data.get("transport")
+            transfer_type = data.get("transfer_type")
 
             if not event_id or not new_venue_id or not after_venue_id:
                 logger.warning("Отсутствуют обязательные поля в запросе")
                 return {"message": "Missing required fields in request"}
 
             await self.session_service.insert_venue_after(
-                event_id, new_venue_id, after_venue_id, transport
+                event_id, new_venue_id, after_venue_id, transfer_type
             )
             logger.info(
                 "Площадка ID %d успешно добавлена в сессию после площадки %d",
@@ -220,29 +220,29 @@ class SessionController:
             )
             return {"message": "Error updating session", "error": str(e)}
 
-    async def change_transport(
+    async def change_transfer_type(
         self, session_id: int, request: Request
     ) -> dict[str, Any]:
         try:
             data = await request.json()
-            new_transport = data.get("transport")
+            new_transfer_type = data.get("transfer_type")
             program_id = data.get("program_id")
-            if not session_id or not new_transport:
+            if not session_id or not new_transfer_type:
                 logger.warning("Отсутствуют обязательные поля в запросе")
                 return {"message": "Missing required fields in request"}
-            new_session = await self.session_service.change_transport(
-                program_id, session_id, new_transport
+            new_session = await self.session_service.change_transfer_type(
+                program_id, session_id, new_transfer_type
             )
             logger.info(
                 "Транспорт в сессии ID %d успешно изменен на %s",
                 session_id,
-                new_transport,
+                new_transfer_type,
             )
             if new_session is None or new_session.program is None:
                 logger.error("Сессия с ID %d не была обновлена", session_id)
-                return {"message": "Error updating transport, session not found"}
+                return {"message": "Error updating transfer_type, session not found"}
             return {
-                "message": "Transport updated successfully",
+                "message": "transfer_type updated successfully",
                 "program_id": new_session.program.program_id,
             }
         except Exception as e:
@@ -252,7 +252,7 @@ class SessionController:
                 str(e),
                 exc_info=True,
             )
-            return {"message": "Error updating transport", "error": str(e)}
+            return {"message": "Error updating transfer_type", "error": str(e)}
 
     async def get_session_details(self, request: Request) -> dict[str, Any]:
         try:
@@ -319,17 +319,17 @@ class SessionController:
                             "program": (
                                 {
                                     "id": s.program.program_id,
-                                    "type_transport": s.program.type_transport,
+                                    "transfer_type": s.program.transfer_type,
                                     "cost": s.program.cost,
-                                    "distance": s.program.distance,
-                                    "from_venue": (
-                                        s.program.from_venue.name
-                                        if s.program.from_venue
+                                    "transfer_duration_minutes": s.program.transfer_duration_minutes,
+                                    "start_venue": (
+                                        s.program.start_venue.name
+                                        if s.program.start_venue
                                         else None
                                     ),
-                                    "to_venue": (
-                                        s.program.to_venue.name
-                                        if s.program.to_venue
+                                    "end_venue": (
+                                        s.program.end_venue.name
+                                        if s.program.end_venue
                                         else None
                                     ),
                                 }

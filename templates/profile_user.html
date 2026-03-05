@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
@@ -35,18 +35,18 @@
       border-bottom: 1px solid #eee;
       padding-bottom: 10px;
     }
-    .route-card {
+    .session-card {
       margin-bottom: 20px;
       border-left: 4px solid #5c6bc0;
       padding-left: 10px;
     }
     
-    .no-routes {
+    .no-sessions {
       text-align: center;
       padding: 40px 0;
     }
     
-    .no-routes i {
+    .no-sessions i {
       display: block;
       margin-bottom: 20px;
     }
@@ -151,7 +151,7 @@
             </div>
           </div>
 
-          <!-- Блок с активными путешествиями -->
+          <!-- Блок с активными мероприятиями -->
           <div class="profile-card">
             <div class="row">
               <div class="col s12">
@@ -167,7 +167,7 @@
                   {% for session in active_sessions %}
                     <div class="card hoverable">
                       <div class="card-content">
-                        <!-- Основная информация о маршруте -->
+                        <!-- Основная информация о программе -->
                         <div class="section" style="margin-top: 15px;">
                           <h6><i class="material-icons tiny">group</i> Участники:</h6>
                           {% if session.users %}
@@ -191,7 +191,7 @@
                             </p>
                             <p>
                               <i class="material-icons tiny">directions_transit</i>
-                              {{ session.transport }}
+                              {{ session.transfer_type }}
                             </p>
                             <p>
                               <i class="material-icons tiny">attach_money</i>
@@ -283,7 +283,7 @@
                   {% endfor %}
                 {% else %}
                   <div class="center-align" style="padding: 40px 0">
-                    <i class="material-icons large grey-text">airplanemode_inactive</i>
+                    <i class="material-icons large grey-text">event_busy</i>
                     <h5>У вас нет активных мероприятий</h5>
                     <p>Начните планировать свое следующее мероприятие!</p>
                     <a href="/session/new" class="btn waves-effect waves-light indigo">
@@ -318,7 +318,7 @@
                               {{ session.destination_venue }}
                             </span>
                             <p><i class="material-icons tiny">date_range</i> {{ session.start_time.strftime('%d.%m.%Y') }}</p>
-                            <p><i class="material-icons tiny">directions_transit</i> {{ session.transport }}</p>
+                            <p><i class="material-icons tiny">directions_transit</i> {{ session.transfer_type }}</p>
                             <p><i class="material-icons tiny">attach_money</i>Стоимость: {{ session.cost }} руб.</p>
                             <!-- Раздел с Активностими -->
                             <div class="section" style="margin-top: 15px;">
@@ -420,3 +420,5 @@
   </script>
 </body>
 </html>
+
+

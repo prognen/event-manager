@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import logging
 
@@ -174,7 +174,7 @@ class SessionRepository(ISessionRepository):
         query = text("""
             SELECT s.* FROM session s
             JOIN program p ON s.program_id = p.id
-            WHERE p.from_venue = :venue_id OR p.to_venue = :venue_id
+            WHERE p.start_venue = :venue_id OR p.end_venue = :venue_id
         """)
         try:
             result = await self.session.execute(query, {"venue_id": venue_id})
@@ -204,8 +204,8 @@ class SessionRepository(ISessionRepository):
         for i, s in enumerate(sessions):
             if s.program is None:
                 continue
-            if (s.program.from_venue and s.program.from_venue.venue_id == venue_id) or \
-               (s.program.to_venue and s.program.to_venue.venue_id == venue_id):
+            if (s.program.start_venue and s.program.start_venue.venue_id == venue_id) or \
+               (s.program.end_venue and s.program.end_venue.venue_id == venue_id):
                 segments_to_remove.append(i)
 
         if not segments_to_remove:
@@ -216,13 +216,13 @@ class SessionRepository(ISessionRepository):
         first_idx = segments_to_remove[0]
         if first_idx > 0:
             prev_s = sessions[first_idx - 1]
-            if prev_s.program and prev_s.program.from_venue:
-                prev_venue_id = prev_s.program.from_venue.venue_id
+            if prev_s.program and prev_s.program.start_venue:
+                prev_venue_id = prev_s.program.start_venue.venue_id
         last_idx = segments_to_remove[-1]
         if last_idx < len(sessions) - 1:
             next_s = sessions[last_idx + 1]
-            if next_s.program and next_s.program.to_venue:
-                next_venue_id = next_s.program.to_venue.venue_id
+            if next_s.program and next_s.program.end_venue:
+                next_venue_id = next_s.program.end_venue.venue_id
 
         for i in sorted(segments_to_remove, reverse=True):
             await self.delete(sessions[i].session_id)
@@ -231,8 +231,8 @@ class SessionRepository(ISessionRepository):
             first_removed = sessions[segments_to_remove[0]]
             if first_removed.program is None:
                 raise ValueError("Не удалось определить транспорт")
-            transport = first_removed.program.type_transport
-            new_program = await self.program_repo.get_by_venues(prev_venue_id, next_venue_id, transport)
+            transfer_type = first_removed.program.transfer_type
+            new_program = await self.program_repo.get_by_venues(prev_venue_id, next_venue_id, transfer_type)
             if new_program and first_removed.event:
                 new_session = Session(
                     session_id=1,
@@ -244,15 +244,15 @@ class SessionRepository(ISessionRepository):
                 )
                 await self.add(new_session)
 
-    async def change_transport(
-        self, program_id: int, session_id: int, new_transport: str
+    async def change_transfer_type(
+        self, program_id: int, session_id: int, new_transfer_type: str
     ) -> Session | None:
         try:
             result = await self.session.execute(text("SELECT * FROM session WHERE id = :session_id"), {"session_id": session_id})
             row = result.mappings().first()
             if not row:
                 return None
-            new_program = await self.program_repo.change_transport(program_id, new_transport)
+            new_program = await self.program_repo.change_transfer_type(program_id, new_transfer_type)
             if not new_program:
                 return None
             await self.session.execute(
@@ -267,7 +267,7 @@ class SessionRepository(ISessionRepository):
             raise
 
     async def insert_venue_after(
-        self, event_id: int, new_venue_id: int, after_venue_id: int, transport: str
+        self, event_id: int, new_venue_id: int, after_venue_id: int, transfer_type: str
     ) -> None:
         sessions = await self.get_sessions_by_event_id_ordered(event_id)
         if not sessions:
@@ -278,11 +278,11 @@ class SessionRepository(ISessionRepository):
         for s in sessions:
             if s.program is None:
                 continue
-            if s.program.to_venue and s.program.to_venue.venue_id == after_venue_id:
+            if s.program.end_venue and s.program.end_venue.venue_id == after_venue_id:
                 target_session = s
                 insert_after = True
                 break
-            if s.program.from_venue and s.program.from_venue.venue_id == after_venue_id:
+            if s.program.start_venue and s.program.start_venue.venue_id == after_venue_id:
                 target_session = s
                 break
 
@@ -290,7 +290,7 @@ class SessionRepository(ISessionRepository):
             raise ValueError(f"Площадка {after_venue_id} не найдена в сессиях")
 
         if insert_after:
-            new_program = await self.program_repo.get_by_venues(after_venue_id, new_venue_id, transport)
+            new_program = await self.program_repo.get_by_venues(after_venue_id, new_venue_id, transfer_type)
             if new_program and target_session.event:
                 new_s = Session(
                     session_id=1,
@@ -357,19 +357,19 @@ class SessionRepository(ISessionRepository):
             SELECT
                 s.id as session_id,
                 p.id as program_id,
-                fv.venue_id as from_venue_id,
-                fv.name as from_venue_name,
-                tv.venue_id as to_venue_id,
-                tv.name as to_venue_name,
-                p.type_transport as transport,
+                fv.venue_id as start_venue_id,
+                fv.name as start_venue_name,
+                tv.venue_id as end_venue_id,
+                tv.name as end_venue_name,
+                p.transfer_type as transfer_type,
                 p.cost as price,
                 s.start_time,
                 s.end_time,
                 s.type
             FROM session s
             JOIN program p ON s.program_id = p.id
-            JOIN Venue fv ON p.from_venue = fv.venue_id
-            JOIN Venue tv ON p.to_venue = tv.venue_id
+            JOIN Venue fv ON p.start_venue = fv.venue_id
+            JOIN Venue tv ON p.end_venue = tv.venue_id
             WHERE s.event_id = :event_id
             ORDER BY s.start_time
         """)
@@ -380,9 +380,9 @@ class SessionRepository(ISessionRepository):
                 parts.append({
                     "session_id": row["session_id"],
                     "program_id": row["program_id"],
-                    "from_venue": {"venue_id": row["from_venue_id"], "name": row["from_venue_name"]},
-                    "to_venue": {"venue_id": row["to_venue_id"], "name": row["to_venue_name"]},
-                    "transport": row["transport"],
+                    "start_venue": {"venue_id": row["start_venue_id"], "name": row["start_venue_name"]},
+                    "end_venue": {"venue_id": row["end_venue_id"], "name": row["end_venue_name"]},
+                    "transfer_type": row["transfer_type"],
                     "start_time": row["start_time"],
                     "end_time": row["end_time"],
                     "type": row["type"],
@@ -392,3 +392,4 @@ class SessionRepository(ISessionRepository):
         except SQLAlchemyError as e:
             logger.error("Ошибка при получении частей сессии для event_id=%d: %s", event_id, str(e), exc_info=True)
             raise
+

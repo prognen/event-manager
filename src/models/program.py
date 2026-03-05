@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from pydantic import BaseModel
 from pydantic import ConfigDict
@@ -10,13 +10,13 @@ from models.venue import Venue
 
 class Program(BaseModel):
     program_id: int
-    type_transport: str
+    transfer_type: str
     cost: int
-    distance: int
-    from_venue: Venue | None = Field(
+    transfer_duration_minutes: int
+    start_venue: Venue | None = Field(
         default=None, description="Площадка отправления"
     )
-    to_venue: Venue | None = Field(
+    end_venue: Venue | None = Field(
         default=None, description="Площадка назначения"
     )
     model_config = ConfigDict(populate_by_name=True)
@@ -35,33 +35,34 @@ class Program(BaseModel):
             raise ValueError("cost должен быть положительным числом")
         return value
 
-    @field_validator("type_transport")
+    @field_validator("transfer_type")
     @classmethod
-    def validate_type_transport(cls, v: str) -> str:
+    def validate_transfer_type(cls, v: str) -> str:
         allowed_types = {"Автобус", "Самолет", "Автомобиль", "Паром", "Поезд"}
         if v not in allowed_types:
             raise ValueError(
-                f'type_transport должен быть одним из следующих: {", ".join(allowed_types)}'
+                f'transfer_type должен быть одним из следующих: {", ".join(allowed_types)}'
             )
         return v
 
-    @field_validator("distance")
+    @field_validator("transfer_duration_minutes")
     @classmethod
-    def check_distance_is_positive(cls, value: int) -> int:
+    def check_transfer_duration_is_positive(cls, value: int) -> int:
         if value <= 0:
-            raise ValueError("distance должен быть положительным числом")
+            raise ValueError("transfer_duration_minutes должен быть положительным числом")
         return value
 
-    @field_validator("from_venue")
+    @field_validator("start_venue")
     @classmethod
-    def check_from_venue(cls, value: Venue | None) -> Venue | None:
+    def check_start_venue(cls, value: Venue | None) -> Venue | None:
         if value is not None and not isinstance(value, Venue):
-            raise ValueError("from_venue должен быть экземпляром Venue")
+            raise ValueError("start_venue должен быть экземпляром Venue")
         return value
 
-    @field_validator("to_venue")
+    @field_validator("end_venue")
     @classmethod
-    def check_to_venue(cls, value: Venue | None) -> Venue | None:
+    def check_end_venue(cls, value: Venue | None) -> Venue | None:
         if value is not None and not isinstance(value, Venue):
-            raise ValueError("to_venue должен быть экземпляром Venue")
+            raise ValueError("end_venue должен быть экземпляром Venue")
         return value
+

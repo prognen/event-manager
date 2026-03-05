@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
@@ -104,13 +104,13 @@
       <div class="nav-wrapper">
         <a href="index.html" class="brand-logo left">EventManager</a>
         <ul class="right">
-          <li><a href="#!" class="dropdown-trigger" data-target="route_dropdown"><i class="material-icons">account_circle</i></a></li>
+          <li><a href="#!" class="dropdown-trigger" data-target="session_dropdown"><i class="material-icons">account_circle</i></a></li>
         </ul>
       </div>
     </nav>
   </header>
   <!-- Выпадающее меню -->
-  <ul id="route_dropdown" class="dropdown-content">
+  <ul id="session_dropdown" class="dropdown-content">
     <li><a href="#!" id="profileLink">Профиль</a></li>
     <li><a href="#!" id="logoutLink">Выйти</a></li>
   </ul>
@@ -134,7 +134,7 @@
   <!-- Основной контент -->
   <main>
     <div class="container">
-      <h3>Список Сессияов</h3>
+      <h3>Список сессий</h3>
       <table class="striped">
         <thead>
           <tr>
@@ -154,15 +154,15 @@
 
                 <td>
                     {% if session.program %}
-                    <a href="#dRouteModal" 
+                    <a href="#programModal" 
                         class="modal-trigger programData-link"
                         data-id="{{ session.program.id }}"
-                        data-type-transport="{{ session.program.type_transport }}"
+                        data-type-transfer_type="{{ session.program.transfer_type }}"
                         data-cost="{{ session.program.cost }}"
-                        data-distance="{{ session.program.distance }}"
-                        data-departure-city="{{ session.program.from_venue }}"
-                        data-destination-city="{{ session.program.to_venue }}">
-                        Сессия #{{ session.program.id }}
+                        data-transfer_duration_minutes="{{ session.program.transfer_duration_minutes }}"
+                        data-departure-city="{{ session.program.start_venue }}"
+                        data-destination-city="{{ session.program.end_venue }}">
+                        Программа #{{ session.program.id }}
                     </a>
                     {% else %}
                         Не указан
@@ -189,7 +189,7 @@
                 <td>{{ session.type }}</td>
 
                 <td>
-                <form method="post" action="/session/delete/{{ session.id }}" onsubmit="return confirm('Удалить этот Сессия?');">
+                <form method="post" action="/session/delete/{{ session.id }}" onsubmit="return confirm('Удалить эту сессию?');">
                     <button type="submit" class="btn-flat" style="color: #888;">
                     <i class="material-icons">delete</i>
                     </button>
@@ -221,19 +221,19 @@
 <!-- Модальное окно -->
 <div id="addSessionModal" class="modal">  
     <div class="modal-content">
-      <h4>Добавить Сессия</h4>
+      <h4>Добавить сессию</h4>
       <form id="addSessionForm">
         <!-- Выбор пользователя (ID пользователя) -->
         <div class="input-field">
-          <select id="d_session_id" name="d_session_id" required>
-            <option value="" disabled selected>Выберите Сессия</option>
+          <select id="program_id" name="program_id" required>
+            <option value="" disabled selected>Выберите программу</option>
               {% for program in programs %}
                   <option value="{{ program.program_id }}">
-                      Сессия #{{ program.program_id }}: {{ program.from_venue.name if program.from_venue else '' }} → {{ program.to_venue.name if program.to_venue else '' }} ({{ program.type_transport }})
+                      Программа #{{ program.program_id }}: {{ program.start_venue.name if program.start_venue else '' }} → {{ program.end_venue.name if program.end_venue else '' }} ({{ program.transfer_type }})
                   </option>
               {% endfor %}
           </select>
-          <label for="d_session_id">Сессия</label>
+          <label for="program_id">Программа</label>
         </div>
         <!-- Выбор существующего мероприятия -->
         <div class="input-field">
@@ -269,7 +269,7 @@
 
         <div class="input-field">
           <input type="text" id="type" name="type" required>
-          <label for="type">Время окончания</label>
+          <label for="type">Тип сессии</label>
         </div>
         <!-- Кнопка отправки формы -->
         <button type="submit" class="btn">Добавить</button>
@@ -280,18 +280,18 @@
 <!-- Модальное окно для редактирования -->
 <div id="editModal" class="modal">
   <div class="modal-content">
-    <h4>Редактировать Сессия</h4>
-    <form id="editRouteForm">
+    <h4>Редактировать сессию</h4>
+    <form id="editSessionForm">
       <div class="input-field">
-        <select id="editDRouteId" name="editDRouteId" required>
-          <option value="" disabled selected>Выберите Сессия</option>
+        <select id="editProgramId" name="editProgramId" required>
+          <option value="" disabled selected>Выберите программу</option>
             {% for program in programs %}
                 <option value="{{ program.program_id }}">
-                    Сессия #{{ program.program_id }}: {{ program.from_venue.name if program.from_venue else '' }} → {{ program.to_venue.name if program.to_venue else '' }} ({{ program.type_transport }})
+                    Программа #{{ program.program_id }}: {{ program.start_venue.name if program.start_venue else '' }} → {{ program.end_venue.name if program.end_venue else '' }} ({{ program.transfer_type }})
                 </option>
             {% endfor %}
         </select>
-        <label for="d_session_id">Сессия</label>
+        <label for="editProgramId">Программа</label>
       </div>
 
       <div class="input-field">
@@ -326,7 +326,7 @@
       </div>
       <div class="input-field">
         <input type="text" id="edit_type" name="type" required>
-        <label for="type">Время окончания</label>
+        <label for="type">Тип сессии</label>
       </div>
     </form>
   </div>
@@ -338,15 +338,15 @@
 </div>
 
 <!-- Модальное окно для programData -->
-<div id="dRouteModal" class="modal">
+<div id="programModal" class="modal">
     <div class="modal-content">
-      <h4>Информация о Сессияе</h4>
-      <p><strong>ID Сессияа:</strong> <span id="programData-id"></span></p>
-      <p><strong>Тип транспорта:</strong> <span id="programData-type-transport"></span></p>
+      <h4>Информация о программе</h4>
+      <p><strong>ID программы:</strong> <span id="programData-id"></span></p>
+      <p><strong>Тип транспорта:</strong> <span id="programData-type-transfer_type"></span></p>
       <p><strong>Стоимость:</strong> <span id="programData-cost"></span></p>
-      <p><strong>Расстояние:</strong> <span id="programData-distance"></span></p>
-      <p><strong>Город отправления:</strong> <span id="programData-from-venue"></span></p>
-      <p><strong>Город назначения:</strong> <span id="programData-to-venue"></span></p>
+      <p><strong>Длительность, мин:</strong> <span id="programData-transfer_duration_minutes"></span></p>
+      <p><strong>Площадка отправления:</strong> <span id="programData-from-venue"></span></p>
+      <p><strong>Площадка назначения:</strong> <span id="programData-to-venue"></span></p>
     </div>
     <div class="modal-footer">
       <button class="modal-close waves-effect waves-green btn-flat">Закрыть</button>
@@ -451,22 +451,23 @@
     });
 
     let currentActivityId = null;
+    let currentSessionId = null;
     let isEditing = false;  
     
     $('#addSessionForm').submit(function (event) {
       event.preventDefault(); 
-      const d_session_id = $('#d_session_id').val();
+      const program_id = $('#program_id').val();
       const event_id = $('#event_id').val();
       const start_time = $('#start_time').val();
       const end_time = $('#end_time').val();
       const type = $('#type').val();
 
-      if (!d_session_id || !event_id || !start_time || !end_time || !type) {
+      if (!program_id || !event_id || !start_time || !end_time || !type) {
         alert("Пожалуйста, заполните все поля.");
         return;
       }
       const formData = {
-        d_session_id: parseInt(d_session_id),
+        program_id: parseInt(program_id),
         event_id: parseInt(event_id),
         start_time: start_time,
         end_time: end_time,
@@ -480,35 +481,35 @@
         data: JSON.stringify(formData),
         success: function (response) {
           $('#addSessionModal').modal('close');
-          alert("Сессия добавлен!");
+          alert("Сессия добавлена!");
           location.reload();
         },
         error: function (error) {
           console.error('Ошибка при добавлении:', error);
-          alert('Ошибка при добавлении нового Сессияа.');
+          alert('Ошибка при добавлении новой сессии.');
         }
       });
     });
 
     $('.edit-trigger').on('click', function() {
-      currentRouteId = $(this).data('id');
+      currentSessionId = $(this).data('id');
 
       const program = $(this).data('program');
-      const event = $(this).data('event');
+      const eventId = $(this).data('event');
       const startTime = $(this).data('start');
       const endTime = $(this).data('end');
-      const Type = $(this).data('type')
-      console.log('ID Сессияа:', currentRouteId);
-      console.log('Объект program:', programData);
-      console.log('ID Мероприятия:', eventId);
+      const sessionType = $(this).data('type');
+      console.log('ID сессии:', currentSessionId);
+      console.log('Объект program:', program);
+      console.log('ID мероприятия:', eventId);
       console.log('Время начала:', startTime);
       console.log('Время конца:', endTime);
 
-      $('#editDRouteId').val(dsession.id);
+      $('#editProgramId').val(program.id);
       $('#editEventId').val(eventId);
       $('#edit_start_time').val(formatDateTimeForInput(startTime));
       $('#edit_end_time').val(formatDateTimeForInput(endTime));
-      $('#edit_type').val(Type);
+      $('#edit_type').val(sessionType);
       
       $('select').formSelect();
       $('#editModal').modal('open');
@@ -516,20 +517,20 @@
 
     $('.programData-link').on('click', function () {
         const id = $(this).data('id');
-        const typeTransport = $(this).data('type-transport');
+        const typeTransport = $(this).data('type-transfer_type');
         const cost = $(this).data('cost');
-        const distance = $(this).data('distance');
+        const transfer_duration_minutes = $(this).data('transfer_duration_minutes');
         const departureCity = $(this).data('departure-city');
         const destinationCity = $(this).data('destination-city');
 
         $('#programData-id').text(id);
-        $('#programData-type-transport').text(typeTransport);
+        $('#programData-type-transfer_type').text(typeTransport);
         $('#programData-cost').text(cost);
-        $('#programData-distance').text(distance);
+        $('#programData-transfer_duration_minutes').text(transfer_duration_minutes);
         $('#programData-from-venue').text(departureCity);
         $('#programData-to-venue').text(destinationCity);
 
-        $('#dRouteModal').modal('open');
+        $('#programModal').modal('open');
     });
         // Открытие модалки для мероприятия
     $('.event-link').on('click', function() {
@@ -602,30 +603,30 @@
 
     $('#saveEdit').on('click', function () {
       const data = {
-        d_session_id: parseInt($('#editDRouteId').val()),
+        program_id: parseInt($('#editProgramId').val()),
         event_id: parseInt($('#editEventId').val()),
         start_time: $('#edit_start_time').val(),
         end_time: $('#edit_end_time').val(),
-        type: $('edit-type').val()
+        type: $('#edit_type').val()
       };
 
-      if (!data.d_session_id || !data.event_id || !data.start_time || !data.end_time || !data.type) {
+      if (!data.program_id || !data.event_id || !data.start_time || !data.end_time || !data.type) {
         alert('Пожалуйста, заполните все поля');
         return;
       }
 
       $.ajax({
-        url: `/api/routes/${currentRouteId}`,
+        url: `/api/sessions/${currentSessionId}`,
         method: 'PUT',
         contentType: 'application/json',
         data: JSON.stringify(data),
         success: function () {
-          M.toast({ html: 'Сессия обновлен!' });
+          M.toast({ html: 'Сессия обновлена!' });
           location.reload();
         },
         error: function (xhr) {
           console.error(xhr);
-          alert('Ошибка при обновлении Сессияа');
+          alert('Ошибка при обновлении сессии');
         }
       });
     });
@@ -643,3 +644,11 @@
 
 </body>
 </html>
+
+
+
+
+
+
+
+

@@ -210,10 +210,10 @@ class SessionRepository(ISessionRepository):
             program_ids = []
             for program in all_programs:
                 if (
-                    program.from_venue
-                    and program.to_venue
+                    program.start_venue
+                    and program.end_venue
                     and venue_id
-                    in {program.from_venue.venue_id, program.to_venue.venue_id}
+                    in {program.start_venue.venue_id, program.end_venue.venue_id}
                 ):
                     program_ids.append(program.program_id)
 
@@ -257,13 +257,13 @@ class SessionRepository(ISessionRepository):
 
                 if venue_id in {
                     (
-                        session.program.from_venue.venue_id
-                        if session.program.from_venue
+                        session.program.start_venue.venue_id
+                        if session.program.start_venue
                         else None
                     ),
                     (
-                        session.program.to_venue.venue_id
-                        if session.program.to_venue
+                        session.program.end_venue.venue_id
+                        if session.program.end_venue
                         else None
                     ),
                 }:
@@ -278,14 +278,14 @@ class SessionRepository(ISessionRepository):
             first_segment_idx = segments_to_remove[0]
             if first_segment_idx > 0:
                 prev_session = sessions[first_segment_idx - 1]
-                if prev_session.program and prev_session.program.from_venue:
-                    prev_venue_id = prev_session.program.from_venue.venue_id
+                if prev_session.program and prev_session.program.start_venue:
+                    prev_venue_id = prev_session.program.start_venue.venue_id
 
             last_segment_idx = segments_to_remove[-1]
             if last_segment_idx < len(sessions) - 1:
                 next_session = sessions[last_segment_idx + 1]
-                if next_session.program and next_session.program.to_venue:
-                    next_venue_id = next_session.program.to_venue.venue_id
+                if next_session.program and next_session.program.end_venue:
+                    next_venue_id = next_session.program.end_venue.venue_id
 
             for i in sorted(segments_to_remove, reverse=True):
                 await self.delete(sessions[i].session_id)
@@ -297,11 +297,11 @@ class SessionRepository(ISessionRepository):
                         "Не удалось определить транспорт для нового сегмента"
                     )
 
-                transport = first_removed_session.program.type_transport
+                transfer_type = first_removed_session.program.transfer_type
                 start_time = first_removed_session.start_time
 
                 program = await self._get_program_between(
-                    prev_venue_id, next_venue_id, transport
+                    prev_venue_id, next_venue_id, transfer_type
                 )
                 new_session = Session(
                     session_id=1,
@@ -318,8 +318,8 @@ class SessionRepository(ISessionRepository):
             )
             raise
 
-    async def change_transport(
-        self, program_id: int, session_id: int, new_transport: str
+    async def change_transfer_type(
+        self, program_id: int, session_id: int, new_transfer_type: str
     ) -> Session | None:
         try:
             session_doc = await self.sessions.find_one({"_id": session_id})
@@ -333,24 +333,24 @@ class SessionRepository(ISessionRepository):
             old_program = await self.program_repo.get_by_id(program_id)
             if (
                 not old_program
-                or not old_program.from_venue
-                or not old_program.to_venue
+                or not old_program.start_venue
+                or not old_program.end_venue
             ):
                 logger.error("Программа с ID %d не найдена", program_id)
                 return None
 
             new_program = await self.program_repo.get_by_venues(
-                old_program.from_venue.venue_id,
-                old_program.to_venue.venue_id,
-                new_transport,
+                old_program.start_venue.venue_id,
+                old_program.end_venue.venue_id,
+                new_transfer_type,
             )
             if (
                 not new_program
-                or not new_program.from_venue
-                or not new_program.to_venue
+                or not new_program.start_venue
+                or not new_program.end_venue
             ):
                 logger.error(
-                    "Программа с транспортом %s не найдена", new_transport
+                    "Программа с транспортом %s не найдена", new_transfer_type
                 )
                 return None
 
@@ -360,11 +360,11 @@ class SessionRepository(ISessionRepository):
                     "$set": {
                         "program": {
                             "_id": new_program.program_id,
-                            "type_transport": new_program.type_transport,
-                            "from_venue_id": new_program.from_venue.venue_id,
-                            "to_venue_id": new_program.to_venue.venue_id,
+                            "transfer_type": new_program.transfer_type,
+                            "start_venue_id": new_program.start_venue.venue_id,
+                            "end_venue_id": new_program.end_venue.venue_id,
                             "price": new_program.cost,
-                            "distance": new_program.distance,
+                            "transfer_duration_minutes": new_program.transfer_duration_minutes,
                         }
                     }
                 },
@@ -376,7 +376,7 @@ class SessionRepository(ISessionRepository):
 
             logger.debug(
                 "Транспорт %s в сессии ID %d успешно обновлён",
-                new_transport,
+                new_transfer_type,
                 session_id,
             )
             return await self.get_by_id(session_id)
@@ -390,21 +390,21 @@ class SessionRepository(ISessionRepository):
             raise
 
     async def _get_program_between(
-        self, from_venue_id: int, to_venue_id: int, transport: str
+        self, start_venue_id: int, end_venue_id: int, transfer_type: str
     ) -> Program:
         program_doc = await self.program_repo.get_by_venues(
-            from_venue_id, to_venue_id, transport
+            start_venue_id, end_venue_id, transfer_type
         )
 
         if not program_doc:
             raise ValueError(
-                f"Нет программы между площадками {from_venue_id} и {to_venue_id}"
+                f"Нет программы между площадками {start_venue_id} и {end_venue_id}"
             )
 
         return program_doc
 
     async def insert_venue_after(
-        self, event_id: int, new_venue_id: int, after_venue_id: int, transport: str
+        self, event_id: int, new_venue_id: int, after_venue_id: int, transfer_type: str
     ) -> None:
         try:
             sessions = await self.get_sessions_by_event_id_ordered(event_id)
@@ -419,15 +419,15 @@ class SessionRepository(ISessionRepository):
                     continue
 
                 if (
-                    session.program.to_venue
-                    and session.program.to_venue.venue_id == after_venue_id
+                    session.program.end_venue
+                    and session.program.end_venue.venue_id == after_venue_id
                 ):
                     target_session = session
                     insert_after = True
                     break
                 if (
-                    session.program.from_venue
-                    and session.program.from_venue.venue_id == after_venue_id
+                    session.program.start_venue
+                    and session.program.start_venue.venue_id == after_venue_id
                 ):
                     target_session = session
                     break
@@ -437,7 +437,7 @@ class SessionRepository(ISessionRepository):
 
             if insert_after:
                 program_new = await self._get_program_between(
-                    after_venue_id, new_venue_id, transport
+                    after_venue_id, new_venue_id, transfer_type
                 )
 
                 new_session = Session(
@@ -451,11 +451,11 @@ class SessionRepository(ISessionRepository):
                 await self.add(new_session)
             else:
                 program_new = await self._get_program_between(
-                    new_venue_id, after_venue_id, transport
+                    new_venue_id, after_venue_id, transfer_type
                 )
-                if not program_new.from_venue or not program_new.to_venue:
+                if not program_new.start_venue or not program_new.end_venue:
                     raise ValueError(
-                        "program_new.from_venue/program_new.to_venue не найдены"
+                        "program_new.start_venue/program_new.end_venue не найдены"
                     )
                 await self.sessions.update_one(
                     {"_id": target_session.session_id},
@@ -463,11 +463,11 @@ class SessionRepository(ISessionRepository):
                         "$set": {
                             "program": {
                                 "_id": program_new.program_id,
-                                "type_transport": program_new.type_transport,
-                                "from_venue_id": program_new.from_venue.venue_id,
-                                "to_venue_id": program_new.to_venue.venue_id,
+                                "transfer_type": program_new.transfer_type,
+                                "start_venue_id": program_new.start_venue.venue_id,
+                                "end_venue_id": program_new.end_venue.venue_id,
                                 "price": program_new.cost,
-                                "distance": program_new.distance,
+                                "transfer_duration_minutes": program_new.transfer_duration_minutes,
                             }
                         },
                         "end_time": target_session.start_time + timedelta(hours=2),
@@ -569,9 +569,9 @@ class SessionRepository(ISessionRepository):
                     {
                         "session_id": int(session_doc["_id"]),
                         "program_id": program_doc.program_id,
-                        "from_venue": program_doc.from_venue,
-                        "to_venue": program_doc.to_venue,
-                        "transport": program_doc.type_transport,
+                        "start_venue": program_doc.start_venue,
+                        "end_venue": program_doc.end_venue,
+                        "transfer_type": program_doc.transfer_type,
                         "start_time": session_doc["start_time"],
                         "end_time": session_doc["end_time"],
                         "type": session_doc["type"],

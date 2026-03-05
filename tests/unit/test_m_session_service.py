@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import re
 
@@ -212,7 +212,7 @@ async def test_should_throw_exception_at_delete_venue_from_session() -> None:
 
 
 @pytest.mark.asyncio
-async def test_should_successfull_change_transport() -> None:
+async def test_should_successfull_change_transfer_type() -> None:
     session = Session(
         session_id=1,
         program=None,
@@ -222,25 +222,25 @@ async def test_should_successfull_change_transport() -> None:
         type="Личные",
     )
     repo = Mock(spec=SessionRepository, autospec=True)
-    repo.change_transport = AsyncMock(return_value=session)
+    repo.change_transfer_type = AsyncMock(return_value=session)
 
     service = SessionService(repo)
-    result = await service.change_transport(1, 1, "Поезд")
+    result = await service.change_transfer_type(1, 1, "Поезд")
 
     assert result == session
-    repo.change_transport.assert_awaited_once_with(1, 1, "Поезд")
+    repo.change_transfer_type.assert_awaited_once_with(1, 1, "Поезд")
 
 
 @pytest.mark.asyncio
-async def test_should_throw_exception_at_change_transport() -> None:
+async def test_should_throw_exception_at_change_transfer_type() -> None:
     repo = Mock(spec=SessionRepository, autospec=True)
-    repo.change_transport = AsyncMock(side_effect=Exception)
+    repo.change_transfer_type = AsyncMock(side_effect=Exception)
 
     service = SessionService(repo)
     with pytest.raises(
         ValueError, match=re.escape("Не удалось изменить транспорт в сессии.")
     ):
-        await service.change_transport(1, 1, "Поезд")
+        await service.change_transfer_type(1, 1, "Поезд")
 
 
 @pytest.mark.asyncio
@@ -300,3 +300,4 @@ async def test_should_successfull_get_session_parts() -> None:
 
     assert result == parts
     repo.get_session_parts.assert_awaited_once_with(1)
+

@@ -29,25 +29,25 @@ class ProgramRepository(IProgramRepository):
         try:
             programs = []
             async for doc in self.collection.find().sort("_id"):
-                from_venue = await self.venue_repo.get_by_id(
-                    doc["from_venue_id"]
+                start_venue = await self.venue_repo.get_by_id(
+                    doc["start_venue_id"]
                 )
-                to_venue = await self.venue_repo.get_by_id(
-                    doc["to_venue_id"]
+                end_venue = await self.venue_repo.get_by_id(
+                    doc["end_venue_id"]
                 )
 
-                if not from_venue or not to_venue:
+                if not start_venue or not end_venue:
                     logger.warning(f"Не удалось найти площадки для программы {doc['_id']}")
                     continue
 
                 programs.append(
                     Program(
                         program_id=int(doc["_id"]),
-                        type_transport=doc["type_transport"],
+                        transfer_type=doc["transfer_type"],
                         cost=doc["price"],
-                        distance=doc["distance"],
-                        from_venue=from_venue,
-                        to_venue=to_venue,
+                        transfer_duration_minutes=doc["transfer_duration_minutes"],
+                        start_venue=start_venue,
+                        end_venue=end_venue,
                     )
                 )
 
@@ -66,21 +66,21 @@ class ProgramRepository(IProgramRepository):
                 logger.warning("Программа с ID %d не найдена", program_id)
                 return None
 
-            from_venue = await self.venue_repo.get_by_id(doc["from_venue_id"])
-            to_venue = await self.venue_repo.get_by_id(doc["to_venue_id"])
+            start_venue = await self.venue_repo.get_by_id(doc["start_venue_id"])
+            end_venue = await self.venue_repo.get_by_id(doc["end_venue_id"])
 
-            if not from_venue or not to_venue:
+            if not start_venue or not end_venue:
                 logger.warning(f"Не удалось найти площадки для программы {doc['_id']}")
                 return None
 
             logger.debug("Найдена программа ID %d", program_id)
             return Program(
                 program_id=int(doc["_id"]),
-                type_transport=doc["type_transport"],
+                transfer_type=doc["transfer_type"],
                 cost=doc["price"],
-                distance=doc["distance"],
-                from_venue=from_venue,
-                to_venue=to_venue,
+                transfer_duration_minutes=doc["transfer_duration_minutes"],
+                start_venue=start_venue,
+                end_venue=end_venue,
             )
         except PyMongoError as e:
             logger.error(
@@ -94,8 +94,8 @@ class ProgramRepository(IProgramRepository):
     async def add(self, program: Program) -> Program:
         try:
             if (
-                not program.from_venue
-                or not program.to_venue
+                not program.start_venue
+                or not program.end_venue
             ):
                 logger.error("Отсутствуют данные о площадках")
                 raise ValueError("Both venues are required")
@@ -105,11 +105,11 @@ class ProgramRepository(IProgramRepository):
 
             doc = {
                 "_id": int(new_id),
-                "type_transport": program.type_transport,
+                "transfer_type": program.transfer_type,
                 "price": int(program.cost),
-                "distance": int(program.distance),
-                "from_venue_id": program.from_venue.venue_id,
-                "to_venue_id": program.to_venue.venue_id,
+                "transfer_duration_minutes": int(program.transfer_duration_minutes),
+                "start_venue_id": program.start_venue.venue_id,
+                "end_venue_id": program.end_venue.venue_id,
             }
 
             await self.collection.insert_one(doc)
@@ -130,8 +130,8 @@ class ProgramRepository(IProgramRepository):
                 raise ValueError("Program ID is required")
 
             if (
-                not update_program.from_venue
-                or not update_program.to_venue
+                not update_program.start_venue
+                or not update_program.end_venue
             ):
                 logger.error("Отсутствуют данные о площадках")
                 raise ValueError("Both venues are required")
@@ -140,11 +140,11 @@ class ProgramRepository(IProgramRepository):
                 {"_id": int(update_program.program_id)},
                 {
                     "$set": {
-                        "type_transport": update_program.type_transport,
+                        "transfer_type": update_program.transfer_type,
                         "price": int(update_program.cost),
-                        "distance": int(update_program.distance),
-                        "from_venue_id": update_program.from_venue.venue_id,
-                        "to_venue_id": update_program.to_venue.venue_id,
+                        "transfer_duration_minutes": int(update_program.transfer_duration_minutes),
+                        "start_venue_id": update_program.start_venue.venue_id,
+                        "end_venue_id": update_program.end_venue.venue_id,
                     }
                 },
             )
@@ -177,40 +177,40 @@ class ProgramRepository(IProgramRepository):
             raise
 
     async def get_by_venues(
-        self, from_venue_id: int, to_venue_id: int, type_transport: str
+        self, start_venue_id: int, end_venue_id: int, transfer_type: str
     ) -> Program | None:
         try:
             doc = await self.collection.find_one(
                 {
-                    "from_venue_id": from_venue_id,
-                    "to_venue_id": to_venue_id,
-                    "type_transport": type_transport,
+                    "start_venue_id": start_venue_id,
+                    "end_venue_id": end_venue_id,
+                    "transfer_type": transfer_type,
                 }
             )
 
             if not doc:
                 logger.warning(
                     "Программа между площадками %d и %d не найдена",
-                    from_venue_id,
-                    to_venue_id,
+                    start_venue_id,
+                    end_venue_id,
                 )
                 return None
 
-            from_venue = await self.venue_repo.get_by_id(doc["from_venue_id"])
-            to_venue = await self.venue_repo.get_by_id(doc["to_venue_id"])
+            start_venue = await self.venue_repo.get_by_id(doc["start_venue_id"])
+            end_venue = await self.venue_repo.get_by_id(doc["end_venue_id"])
 
-            if not from_venue or not to_venue:
+            if not start_venue or not end_venue:
                 logger.warning(f"Не удалось найти площадки для программы {doc['_id']}")
                 return None
 
             logger.debug("Найдена программа ID %s", str(doc["_id"]))
             return Program(
                 program_id=int(doc["_id"]),
-                type_transport=type_transport,
+                transfer_type=transfer_type,
                 cost=doc["price"],
-                distance=doc["distance"],
-                from_venue=from_venue,
-                to_venue=to_venue,
+                transfer_duration_minutes=doc["transfer_duration_minutes"],
+                start_venue=start_venue,
+                end_venue=end_venue,
             )
         except PyMongoError as e:
             logger.error(
@@ -220,19 +220,19 @@ class ProgramRepository(IProgramRepository):
             )
             return None
 
-    async def change_transport(
-        self, program_id: int, new_transport: str
+    async def change_transfer_type(
+        self, program_id: int, new_transfer_type: str
     ) -> Program | None:
         current_program = await self.get_by_id(program_id)
         if not current_program:
             logger.warning("Программа с ID %d не найдена", program_id)
             return None
-        if not current_program.from_venue or not current_program.to_venue:
+        if not current_program.start_venue or not current_program.end_venue:
             logger.warning("Площадки в программе с ID %d не найдены", program_id)
             return None
 
         return await self.get_by_venues(
-            from_venue_id=current_program.from_venue.venue_id,
-            to_venue_id=current_program.to_venue.venue_id,
-            type_transport=new_transport,
+            start_venue_id=current_program.start_venue.venue_id,
+            end_venue_id=current_program.end_venue.venue_id,
+            transfer_type=new_transfer_type,
         )

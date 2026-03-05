@@ -10,7 +10,7 @@ VALUES
 ('Власов Егор Витальевич', '1111111111', '89261111111', 'egor@vlasov.info', 'admin1', '$2b$12$OoiH5pmFNbJn4lj77or/9.zJvXcLMND58wxUZgSwc0nHSfme9KvAm', TRUE),
 ('Соколов Василий Иванович', '1345678453', '89257891245', 'vas@is.com', 'user1', '$2b$12$P0ARs5nc5sPMafswNKNj5.3V1DTq1nQdhsx.7iJvS.90Wh//sOc82', FALSE);
 
-INSERT INTO event_db.program (type_transport, from_venue, to_venue, distance, cost) VALUES
+INSERT INTO event_db.program (transfer_type, start_venue, end_venue, transfer_duration_minutes, cost) VALUES
 ('Автомобиль', 1, 2, 467, 1335),
 ('Автобус', 1, 2, 467, 1335),
 ('Поезд', 1, 2, 467, 1813),

@@ -232,15 +232,15 @@ async def edit_page(
         "program_id": session.program.program_id if session.program else None,
         "start_time": session.start_time,
         "end_time": session.end_time,
-        "transport": (
-            ", ".join({part["transport"] for part in session_parts})
+        "transfer_type": (
+            ", ".join({part["transfer_type"] for part in session_parts})
             if session_parts
             else None
         ),
         "cost": total_cost,
-        "to_venue": (
-            session.program.to_venue.name
-            if session.program and session.program.to_venue
+        "end_venue": (
+            session.program.end_venue.name
+            if session.program and session.program.end_venue
             else None
         ),
         "activities": session.event.activities if session.event else [],
@@ -259,11 +259,11 @@ async def edit_page(
     )
 
 
-@session_router.put("/session/change_transport/{session_id}")
-async def change_transport(
+@session_router.put("/session/change_transfer_type/{session_id}")
+async def change_transfer_type(
     session_id: int, request: Request, service_locator: ServiceLocator = get_sl_dep
 ) -> dict[str, Any]:
-    result = await service_locator.get_session_contr().change_transport(
+    result = await service_locator.get_session_contr().change_transfer_type(
         session_id, request
     )
     logger.info("Транспорт в сессии успешно изменен: %s", result)
@@ -309,205 +309,110 @@ async def api_change_session_duration(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@session_router.get("/tours", response_class=HTMLResponse)
-async def get_tours(
+def _build_session_catalog_item(
+    session: Any, include_user_ids: bool = False
+) -> dict[str, Any]:
+    program = getattr(session, "program", None)
+    event = getattr(session, "event", None)
+
+    lodgings = getattr(event, "lodgings", []) if event else []
+    activities_raw = getattr(event, "activities", []) if event else []
+    users_raw = getattr(event, "users", []) if event else []
+
+    transport_cost = getattr(program, "cost", 0) if program else 0
+    lodging_cost = sum(getattr(lod, "price", 0) for lod in (lodgings or []))
+
+    lodgings_list = []
+    for lod in lodgings or []:
+        check_in = getattr(lod, "check_in", None)
+        check_out = getattr(lod, "check_out", None)
+        lodgings_list.append(
+            {
+                "name": getattr(lod, "name", "Не указано"),
+                "type": getattr(lod, "type", "Не указан"),
+                "address": getattr(lod, "address", "Не указан"),
+                "check_in": check_in.strftime("%d.%m.%Y") if check_in else "",
+                "check_out": check_out.strftime("%d.%m.%Y") if check_out else "",
+                "rating": getattr(lod, "rating", 0),
+                "price": getattr(lod, "price", 0),
+            }
+        )
+
+    activities = []
+    for act in activities_raw or []:
+        date = getattr(act, "activity_time", None)
+        activities.append(
+            {
+                "name": getattr(act, "activity_type", "Не указано"),
+                "address": getattr(act, "address", "Не указан"),
+                "date": date.strftime("%d.%m.%Y") if date else "",
+                "duration": getattr(act, "duration", "Не указана"),
+            }
+        )
+
+    start_time = getattr(session, "start_time", None)
+    end_time = getattr(session, "end_time", None)
+
+    item = {
+        "session_id": getattr(session, "session_id", 0),
+        "start_venue": getattr(
+            getattr(program, "start_venue", None), "name", "Не указан"
+        ),
+        "end_venue": getattr(getattr(program, "end_venue", None), "name", "Не указан"),
+        "transfer_type": getattr(program, "transfer_type", "Не указан"),
+        "start_time": start_time.strftime("%d.%m.%Y") if start_time else "",
+        "end_time": end_time.strftime("%d.%m.%Y") if end_time else "",
+        "total_cost": transport_cost + lodging_cost,
+        "lodgings": lodgings_list,
+        "activities": activities,
+    }
+    if include_user_ids:
+        item["user_ids"] = [
+            u.user_id for u in users_raw if hasattr(u, "user_id")
+        ]
+    return item
+
+
+@session_router.get("/programs/official", response_class=HTMLResponse)
+@session_router.get("/tours", response_class=HTMLResponse)  # legacy alias
+async def get_official_programs(
     request: Request, service_locator: ServiceLocator = get_sl_dep
 ) -> HTMLResponse:
     sessions = await service_locator.get_session_serv().get_sessions_by_type(
         "Официальные"
     )
-    sessions_data = []
-
-    for session in sessions:
-        transport_cost = (
-            session.program.cost
-            if hasattr(session, "program") and session.program
-            else 0
-        )
-        lodging_cost = 0
-        if (
-            hasattr(session, "event")
-            and session.event
-            and hasattr(session.event, "lodgings")
-        ):
-            lodgings = session.event.lodgings or []
-            lodging_cost = sum(getattr(lod, "price", 0) for lod in lodgings)
-
-        lodgings_list = []
-        if (
-            hasattr(session, "event")
-            and session.event
-            and hasattr(session.event, "lodgings")
-        ):
-            for lod in getattr(session.event, "lodgings", []):
-                logger.info("lod: %s", lod)
-                check_in = getattr(lod, "check_in", None)
-                check_out = getattr(lod, "check_out", None)
-
-                lod_data = {
-                    "name": getattr(lod, "name", "Не указано"),
-                    "type": getattr(lod, "type", "Не указан"),
-                    "address": getattr(lod, "address", "Не указан"),
-                    "check_in": check_in.strftime("%d.%m.%Y") if check_in else "",
-                    "check_out": check_out.strftime("%d.%m.%Y") if check_out else "",
-                    "rating": getattr(lod, "rating", 0),
-                    "price": getattr(lod, "price", 0),
-                }
-                lodgings_list.append(lod_data)
-
-        activities = []
-        if (
-            hasattr(session, "event")
-            and session.event
-            and hasattr(session.event, "activities")
-        ):
-            for act in getattr(session.event, "activities", []):
-                date = getattr(act, "activity_time", None)
-
-                act_data = {
-                    "name": getattr(act, "activity_type", "Не указано"),
-                    "address": getattr(act, "address", "Не указан"),
-                    "date": date.strftime("%d.%m.%Y") if date else "",
-                    "duration": getattr(act, "duration", "Не указана"),
-                }
-                activities.append(act_data)
-
-        start_time = getattr(session, "start_time", None)
-        end_time = getattr(session, "end_time", None)
-
-        session_dict = {
-            "session_id": getattr(session, "session_id", 0),
-            "from_venue": getattr(
-                getattr(getattr(session, "program", None), "from_venue", None),
-                "name",
-                "Не указан",
-            ),
-            "to_venue": getattr(
-                getattr(getattr(session, "program", None), "to_venue", None),
-                "name",
-                "Не указан",
-            ),
-            "transport": getattr(
-                getattr(session, "program", None), "type_transport", "Не указан"
-            ),
-            "start_time": start_time.strftime("%d.%m.%Y") if start_time else "",
-            "end_time": end_time.strftime("%d.%m.%Y") if end_time else "",
-            "cost": transport_cost + lodging_cost,
-            "lodgings": lodgings_list or [],
-            "activities": activities or [],
-        }
-        logger.info(f"Сформированные данные сессии: {session_dict}")
-        sessions_data.append(session_dict)
+    sessions_data = [_build_session_catalog_item(s) for s in sessions]
 
     return templates.TemplateResponse(
-        "tours.html",
-        {"request": request, "sessions": jsonable_encoder(sessions_data)},
+        "program_catalog.html",
+        {
+            "request": request,
+            "sessions": jsonable_encoder(sessions_data),
+            "catalog_title": "Официальные программы",
+        },
     )
 
 
-@session_router.get("/recommended", response_class=HTMLResponse)
-async def get_recommended_tours(
+@session_router.get("/programs/recommended", response_class=HTMLResponse)
+@session_router.get("/recommended", response_class=HTMLResponse)  # legacy alias
+async def get_recommended_programs(
     request: Request, service_locator: ServiceLocator = get_sl_dep
 ) -> HTMLResponse:
     sessions = await service_locator.get_session_serv().get_sessions_by_type(
         "Рекомендованные"
     )
-    sessions_data = []
-
-    for session in sessions:
-        transport_cost = (
-            session.program.cost
-            if hasattr(session, "program") and session.program
-            else 0
-        )
-        lodging_cost = 0
-        if (
-            hasattr(session, "event")
-            and session.event
-            and hasattr(session.event, "lodgings")
-        ):
-            lodgings = session.event.lodgings or []
-            lodging_cost = sum(getattr(lod, "price", 0) for lod in lodgings)
-        if (
-            hasattr(session, "event")
-            and session.event
-            and hasattr(session.event, "users")
-        ):
-            user_ids = [
-                u.user_id for u in session.event.users if hasattr(u, "user_id")
-            ]
-        lodgings_list = []
-        if (
-            hasattr(session, "event")
-            and session.event
-            and hasattr(session.event, "lodgings")
-        ):
-            for lod in getattr(session.event, "lodgings", []):
-                logger.info("lod: %s", lod)
-                check_in = getattr(lod, "check_in", None)
-                check_out = getattr(lod, "check_out", None)
-
-                lod_data = {
-                    "name": getattr(lod, "name", "Не указано"),
-                    "type": getattr(lod, "type", "Не указан"),
-                    "address": getattr(lod, "address", "Не указан"),
-                    "check_in": check_in.strftime("%d.%m.%Y") if check_in else "",
-                    "check_out": check_out.strftime("%d.%m.%Y") if check_out else "",
-                    "rating": getattr(lod, "rating", 0),
-                    "price": getattr(lod, "price", 0),
-                }
-                lodgings_list.append(lod_data)
-
-        activities = []
-        if (
-            hasattr(session, "event")
-            and session.event
-            and hasattr(session.event, "activities")
-        ):
-            for act in getattr(session.event, "activities", []):
-                date = getattr(act, "activity_time", None)
-
-                act_data = {
-                    "name": getattr(act, "activity_type", "Не указано"),
-                    "address": getattr(act, "address", "Не указан"),
-                    "date": date.strftime("%d.%m.%Y") if date else "",
-                    "duration": getattr(act, "duration", "Не указана"),
-                }
-                activities.append(act_data)
-
-        start_time = getattr(session, "start_time", None)
-        end_time = getattr(session, "end_time", None)
-
-        session_dict = {
-            "session_id": getattr(session, "session_id", 0),
-            "from_venue": getattr(
-                getattr(getattr(session, "program", None), "from_venue", None),
-                "name",
-                "Не указан",
-            ),
-            "to_venue": getattr(
-                getattr(getattr(session, "program", None), "to_venue", None),
-                "name",
-                "Не указан",
-            ),
-            "transport": getattr(
-                getattr(session, "program", None), "type_transport", "Не указан"
-            ),
-            "start_time": start_time.strftime("%d.%m.%Y") if start_time else "",
-            "end_time": end_time.strftime("%d.%m.%Y") if end_time else "",
-            "cost": transport_cost + lodging_cost,
-            "lodgings": lodgings_list or [],
-            "activities": activities or [],
-            "user_ids": user_ids,
-        }
-        logger.info(f"Сформированные данные сессии: {session_dict}")
-        sessions_data.append(session_dict)
+    sessions_data = [
+        _build_session_catalog_item(s, include_user_ids=True) for s in sessions
+    ]
 
     return templates.TemplateResponse(
-        "recommended.html",
-        {"request": request, "sessions": jsonable_encoder(sessions_data)},
+        "program_catalog.html",
+        {
+            "request": request,
+            "sessions": jsonable_encoder(sessions_data),
+            "catalog_title": "Рекомендованные программы",
+        },
     )
-
 
 @session_router.post("/sessions/{session_id}/join")
 async def join_session(

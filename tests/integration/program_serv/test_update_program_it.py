@@ -12,12 +12,12 @@ async def test_update_program_success(
     program = await program_service.get_by_id(2)
     assert program is not None
 
-    program.type_transport = "Поезд"
+    program.transfer_type = "Поезд"
     await program_service.update(program)
 
     updated = await program_service.get_by_id(2)
     assert updated is not None
-    assert updated.type_transport == "Поезд"
+    assert updated.transfer_type == "Поезд"
 
 
 

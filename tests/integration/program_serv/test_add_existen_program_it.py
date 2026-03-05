@@ -13,10 +13,10 @@ async def test_add_duplicate_program_raises(
 ) -> None:
     duplicate_program = Program(
         program_id=2,
-        type_transport="Самолет",
-        from_venue=Venue(venue_id=3, name="Санкт-Петербург"),
-        to_venue=Venue(venue_id=4, name="Калининград"),
-        distance=966,
+        transfer_type="Самолет",
+        start_venue=Venue(venue_id=3, name="Санкт-Петербург"),
+        end_venue=Venue(venue_id=4, name="Калининград"),
+        transfer_duration_minutes=966,
         cost=5123,
     )
 

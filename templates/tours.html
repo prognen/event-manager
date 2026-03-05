@@ -26,7 +26,7 @@
     .container {
       margin-top: 100px;
     }
-    .route-card {
+    .session-card {
       border-radius: 8px;
       overflow: hidden;
       background: white;
@@ -41,18 +41,18 @@
       padding: 15px 20px;
       background-color: #f9f9f9;
     }
-    .route-title {
+    .session-title {
       font-size: 1.4rem;
       font-weight: 500;
       color: #3a3a3a;
     }
-    .route-info {
+    .session-info {
       margin: 10px 0;
       color: #666;
       display: flex;
       align-items: center;
     }
-    .route-info i {
+    .session-info i {
       margin-right: 8px;
       color: #42a5f5;
     }
@@ -208,21 +208,21 @@
       <div class="row">
         {% for session in sessions %}
           <div class="col s12 m6 l4">
-            <div class="card route-card hoverable">
+            <div class="card session-card hoverable">
               <div class="card-content">
-                <span class="route-title">{{ session.from_venue }} → {{ session.to_venue }}</span>
+                <span class="session-title">{{ session.start_venue }} → {{ session.end_venue }}</span>
                 
-                <div class="route-info">
+                <div class="session-info">
                   <i class="material-icons">event</i>
                   <span>{{ session.start_time }} – {{ session.end_time }}</span>
                 </div>
                 
-                <div class="route-info">
+                <div class="session-info">
                   <i class="material-icons">directions</i>
-                  <span>{{ session.transport }}</span>
+                  <span>{{ session.transfer_type }}</span>
                 </div>
                 
-                <div class="route-info">
+                <div class="session-info">
                   <i class="material-icons">attach_money</i>
                   <span class="price-tag">{{ session.cost }} руб.</span>
                 </div>
@@ -393,7 +393,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       try {
-        const response = await fetch(`/sessions/${routeId}/join`, {
+        const response = await fetch(`/sessions/${sessionId}/join`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -433,4 +433,5 @@ document.addEventListener('DOMContentLoaded', function() {
     </script>
 </body>
 </html>
+
 

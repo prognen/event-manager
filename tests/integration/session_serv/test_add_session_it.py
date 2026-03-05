@@ -22,11 +22,11 @@ async def test_add_session_success(
 ) -> None:
     program = Program(
         program_id=1,
-        type_transport="Паром",
+        transfer_type="Паром",
         cost=3987,
-        distance=966,
-        from_venue=Venue(venue_id=3, name="Санкт-Петербург"),
-        to_venue=Venue(venue_id=5, name="Калининград"),
+        transfer_duration_minutes=966,
+        start_venue=Venue(venue_id=3, name="Санкт-Петербург"),
+        end_venue=Venue(venue_id=5, name="Калининград"),
     )
     user = User(
         user_id=1,

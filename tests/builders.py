@@ -428,44 +428,44 @@ class ProgramBuilder:
 
     def __init__(self) -> None:
         self._program_id: int = 1
-        self._type_transport: str = "Автобус"
+        self._transfer_type: str = "Автобус"
         self._cost: int = 2000
-        self._distance: int = 500
-        self._from_venue: Optional[Venue] = None
-        self._to_venue: Optional[Venue] = None
+        self._transfer_duration_minutes: int = 500
+        self._start_venue: Optional[Venue] = None
+        self._end_venue: Optional[Venue] = None
 
     def with_id(self, program_id: int) -> "ProgramBuilder":
         self._program_id = program_id
         return self
 
-    def with_transport(self, type_transport: str) -> "ProgramBuilder":
-        self._type_transport = type_transport
+    def with_transport(self, transfer_type: str) -> "ProgramBuilder":
+        self._transfer_type = transfer_type
         return self
 
     def with_cost(self, cost: int) -> "ProgramBuilder":
         self._cost = cost
         return self
 
-    def with_distance(self, distance: int) -> "ProgramBuilder":
-        self._distance = distance
+    def with_transfer_duration_minutes(self, transfer_duration_minutes: int) -> "ProgramBuilder":
+        self._transfer_duration_minutes = transfer_duration_minutes
         return self
 
-    def with_from_venue(self, venue: Venue) -> "ProgramBuilder":
-        self._from_venue = venue
+    def with_start_venue(self, venue: Venue) -> "ProgramBuilder":
+        self._start_venue = venue
         return self
 
-    def with_to_venue(self, venue: Venue) -> "ProgramBuilder":
-        self._to_venue = venue
+    def with_end_venue(self, venue: Venue) -> "ProgramBuilder":
+        self._end_venue = venue
         return self
 
     def build(self) -> Program:
         return Program(
             program_id=self._program_id,
-            type_transport=self._type_transport,
+            transfer_type=self._transfer_type,
             cost=self._cost,
-            distance=self._distance,
-            from_venue=self._from_venue,
-            to_venue=self._to_venue,
+            transfer_duration_minutes=self._transfer_duration_minutes,
+            start_venue=self._start_venue,
+            end_venue=self._end_venue,
         )
 
 
@@ -476,8 +476,8 @@ class ProgramMother:
     def default() -> Program:
         return (
             ProgramBuilder()
-            .with_from_venue(VenueMother.moscow())
-            .with_to_venue(VenueMother.saint_petersburg())
+            .with_start_venue(VenueMother.moscow())
+            .with_end_venue(VenueMother.saint_petersburg())
             .build()
         )
 
@@ -488,9 +488,9 @@ class ProgramMother:
             .with_id(1)
             .with_transport("Поезд")
             .with_cost(1911)
-            .with_distance(515)
-            .with_from_venue(VenueMother.moscow())
-            .with_to_venue(VenueMother.saint_petersburg())
+            .with_transfer_duration_minutes(515)
+            .with_start_venue(VenueMother.moscow())
+            .with_end_venue(VenueMother.saint_petersburg())
             .build()
         )
 
@@ -501,9 +501,9 @@ class ProgramMother:
             .with_id(2)
             .with_transport("Самолет")
             .with_cost(2223)
-            .with_distance(467)
-            .with_from_venue(VenueMother.moscow())
-            .with_to_venue(VenueMother.saint_petersburg())
+            .with_transfer_duration_minutes(467)
+            .with_start_venue(VenueMother.moscow())
+            .with_end_venue(VenueMother.saint_petersburg())
             .build()
         )
 

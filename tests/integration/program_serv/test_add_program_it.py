@@ -16,14 +16,14 @@ async def test_add_program_success(
 ) -> None:
     new_program = Program(
         program_id=13,
-        type_transport="Поезд",
-        from_venue=Venue(venue_id=1, name="Москва"),
-        to_venue=Venue(venue_id=5, name="Екатеринбург"),
-        distance=600,
+        transfer_type="Поезд",
+        start_venue=Venue(venue_id=1, name="Москва"),
+        end_venue=Venue(venue_id=5, name="Екатеринбург"),
+        transfer_duration_minutes=600,
         cost=2000,
     )
 
     result = await program_service.add(new_program)
 
     assert result.program_id == NEW_PROGRAM_ID
-    assert result.type_transport == "Поезд"
+    assert result.transfer_type == "Поезд"

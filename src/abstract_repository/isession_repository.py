@@ -41,14 +41,14 @@ class ISessionRepository(ABC):
         pass
 
     @abstractmethod
-    async def change_transport(
-        self, program_id: int, session_id: int, new_transport: str
+    async def change_transfer_type(
+        self, program_id: int, session_id: int, new_transfer_type: str
     ) -> Session | None:
         pass
 
     @abstractmethod
     async def insert_venue_after(
-        self, event_id: int, new_venue_id: int, after_venue_id: int, transport: str
+        self, event_id: int, new_venue_id: int, after_venue_id: int, transfer_type: str
     ) -> None:
         pass
 

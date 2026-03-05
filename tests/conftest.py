@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import asyncio
 import uuid
@@ -70,7 +70,7 @@ def mock_repo() -> Mock:
     repo.add = AsyncMock()
     repo.update = AsyncMock()
     repo.delete = AsyncMock()
-    repo.change_transport = AsyncMock()
+    repo.change_transfer_type = AsyncMock()
     repo.get_by_venues = AsyncMock()
     return repo
 
@@ -104,7 +104,12 @@ async def event_loop() -> AsyncGenerator[asyncio.AbstractEventLoop]:
     loop.close()
 
 
-_DEFAULT_DB_URL = "postgresql+asyncpg://test_user:test_password@localhost:5432/test_db"
+# Local default points to docker-compose `test-db` (port 5435).
+# CI should provide DATABASE_URL explicitly.
+_DEFAULT_DB_URL = os.environ.get(
+    "TEST_DATABASE_URL",
+    "postgresql+asyncpg://test_user:test_password@localhost:5435/test_db",
+)
 engine = create_async_engine(
     os.environ.get("DATABASE_URL", _DEFAULT_DB_URL), echo=True
 )
@@ -175,10 +180,10 @@ async def create_tables(session: AsyncSession) -> None:
         """
         CREATE TABLE program (
             id SERIAL PRIMARY KEY,
-            type_transport VARCHAR NOT NULL,
-            from_venue INT REFERENCES Venue(venue_id) ON DELETE CASCADE,
-            to_venue INT REFERENCES Venue(venue_id) ON DELETE CASCADE,
-            distance INT NOT NULL,
+            transfer_type VARCHAR NOT NULL,
+            start_venue INT REFERENCES Venue(venue_id) ON DELETE CASCADE,
+            end_venue INT REFERENCES Venue(venue_id) ON DELETE CASCADE,
+            transfer_duration_minutes INT NOT NULL,
             cost INT NOT NULL
         )
         """,
@@ -319,96 +324,96 @@ async def fill_test_data(session: AsyncSession) -> None:
 
     programs = [
         {
-            "type_transport": "Паром",
-            "from_venue": 3,
-            "to_venue": 5,
-            "distance": 966,
+            "transfer_type": "Паром",
+            "start_venue": 3,
+            "end_venue": 5,
+            "transfer_duration_minutes": 966,
             "cost": 3987,
         },
         {
-            "type_transport": "Самолет",
-            "from_venue": 3,
-            "to_venue": 5,
-            "distance": 966,
+            "transfer_type": "Самолет",
+            "start_venue": 3,
+            "end_venue": 5,
+            "transfer_duration_minutes": 966,
             "cost": 5123,
         },
         {
-            "type_transport": "Автобус",
-            "from_venue": 3,
-            "to_venue": 4,
-            "distance": 1840,
+            "transfer_type": "Автобус",
+            "start_venue": 3,
+            "end_venue": 4,
+            "transfer_duration_minutes": 1840,
             "cost": 3796,
         },
         {
-            "type_transport": "Поезд",
-            "from_venue": 3,
-            "to_venue": 5,
-            "distance": 966,
+            "transfer_type": "Поезд",
+            "start_venue": 3,
+            "end_venue": 5,
+            "transfer_duration_minutes": 966,
             "cost": 2541,
         },
         {
-            "type_transport": "Автобус",
-            "from_venue": 3,
-            "to_venue": 5,
-            "distance": 966,
+            "transfer_type": "Автобус",
+            "start_venue": 3,
+            "end_venue": 5,
+            "transfer_duration_minutes": 966,
             "cost": 4756,
         },
         {
-            "type_transport": "Самолет",
-            "from_venue": 3,
-            "to_venue": 4,
-            "distance": 1840,
+            "transfer_type": "Самолет",
+            "start_venue": 3,
+            "end_venue": 4,
+            "transfer_duration_minutes": 1840,
             "cost": 8322,
         },
         {
-            "type_transport": "Поезд",
-            "from_venue": 3,
-            "to_venue": 4,
-            "distance": 1840,
+            "transfer_type": "Поезд",
+            "start_venue": 3,
+            "end_venue": 4,
+            "transfer_duration_minutes": 1840,
             "cost": 4305,
         },
         {
-            "type_transport": "Самолет",
-            "from_venue": 5,
-            "to_venue": 4,
-            "distance": 3025,
+            "transfer_type": "Самолет",
+            "start_venue": 5,
+            "end_venue": 4,
+            "transfer_duration_minutes": 3025,
             "cost": 10650,
         },
         {
-            "type_transport": "Поезд",
-            "from_venue": 5,
-            "to_venue": 4,
-            "distance": 3025,
+            "transfer_type": "Поезд",
+            "start_venue": 5,
+            "end_venue": 4,
+            "transfer_duration_minutes": 3025,
             "cost": 5988,
         },
         {
-            "type_transport": "Самолет",
-            "from_venue": 1,
-            "to_venue": 2,
-            "distance": 467,
+            "transfer_type": "Самолет",
+            "start_venue": 1,
+            "end_venue": 2,
+            "transfer_duration_minutes": 467,
             "cost": 2223,
         },
         {
-            "type_transport": "Поезд",
-            "from_venue": 1,
-            "to_venue": 2,
-            "distance": 515,
+            "transfer_type": "Поезд",
+            "start_venue": 1,
+            "end_venue": 2,
+            "transfer_duration_minutes": 515,
             "cost": 1911,
         },
         {
-            "type_transport": "Поезд",
-            "from_venue": 4,
-            "to_venue": 1,
-            "distance": 1780,
+            "transfer_type": "Поезд",
+            "start_venue": 4,
+            "end_venue": 1,
+            "transfer_duration_minutes": 1780,
             "cost": 3500,
         },
     ]
     for data in programs:
         await session.execute(
             text(
-                "INSERT INTO program (type_transport, from_venue, "
-                "to_venue, distance, cost) "
-                "VALUES (:type_transport, :from_venue, :to_venue, :distance, :cost)"
+                "INSERT INTO program (transfer_type, start_venue, "
+                "end_venue, transfer_duration_minutes, cost) "
+                "VALUES (:transfer_type, :start_venue, :end_venue, :transfer_duration_minutes, :cost)"
             ),
             data,
         )
@@ -674,6 +679,7 @@ def pytest_configure() -> None:
             pass
     except ImportError:
         pass
+
 
 
 

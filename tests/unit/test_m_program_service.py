@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import re
 
@@ -17,11 +17,11 @@ pytestmark = pytest.mark.unit
 async def test_should_successfull_get_existed_program_by_id(mock_repo: Mock) -> None:
     program = Program(
         program_id=1,
-        type_transport="Самолет",
+        transfer_type="Самолет",
         cost=25866,
-        distance=300000,
-        from_venue=None,
-        to_venue=None,
+        transfer_duration_minutes=300000,
+        start_venue=None,
+        end_venue=None,
     )
     mock_repo.get_by_id.return_value = program
     service = ProgramService(mock_repo)
@@ -48,19 +48,19 @@ async def test_should_successfull_get_list(mock_repo: Mock) -> None:
     programs = [
         Program(
             program_id=1,
-            type_transport="Самолет",
+            transfer_type="Самолет",
             cost=100,
-            distance=200,
-            from_venue=None,
-            to_venue=None,
+            transfer_duration_minutes=200,
+            start_venue=None,
+            end_venue=None,
         ),
         Program(
             program_id=2,
-            type_transport="Поезд",
+            transfer_type="Поезд",
             cost=50,
-            distance=300,
-            from_venue=None,
-            to_venue=None,
+            transfer_duration_minutes=300,
+            start_venue=None,
+            end_venue=None,
         ),
     ]
     mock_repo.get_list.return_value = programs
@@ -76,11 +76,11 @@ async def test_should_successfull_get_list(mock_repo: Mock) -> None:
 async def test_should_successfull_add_program(mock_repo: Mock) -> None:
     program = Program(
         program_id=1,
-        type_transport="Автобус",
+        transfer_type="Автобус",
         cost=200,
-        distance=150,
-        from_venue=None,
-        to_venue=None,
+        transfer_duration_minutes=150,
+        start_venue=None,
+        end_venue=None,
     )
     mock_repo.add.return_value = program
     service = ProgramService(mock_repo)
@@ -97,11 +97,11 @@ async def test_service_should_throw_exception_at_add_duplicate_program(
 ) -> None:
     program = Program(
         program_id=1,
-        type_transport="Автобус",
+        transfer_type="Автобус",
         cost=200,
-        distance=150,
-        from_venue=None,
-        to_venue=None,
+        transfer_duration_minutes=150,
+        start_venue=None,
+        end_venue=None,
     )
     mock_repo.add.side_effect = Exception("Duplicate")
     service = ProgramService(mock_repo)
@@ -116,11 +116,11 @@ async def test_service_should_throw_exception_at_add_duplicate_program(
 async def test_should_successfull_update_existed_program_by_id(mock_repo: Mock) -> None:
     program = Program(
         program_id=1,
-        type_transport="Самолет",
+        transfer_type="Самолет",
         cost=25866,
-        distance=300000,
-        from_venue=None,
-        to_venue=None,
+        transfer_duration_minutes=300000,
+        start_venue=None,
+        end_venue=None,
     )
     service = ProgramService(mock_repo)
 
@@ -136,11 +136,11 @@ async def test_service_should_throw_exception_at_update_not_existed_program(
 ) -> None:
     program = Program(
         program_id=1,
-        type_transport="Самолет",
+        transfer_type="Самолет",
         cost=25866,
-        distance=300000,
-        from_venue=None,
-        to_venue=None,
+        transfer_duration_minutes=300000,
+        start_venue=None,
+        end_venue=None,
     )
     mock_repo.update.side_effect = Exception("Not found")
     service = ProgramService(mock_repo)
@@ -172,46 +172,46 @@ async def test_service_should_throw_exception_at_delete_not_existed_program(
 
 
 @pytest.mark.asyncio
-async def test_should_successfull_change_transport(mock_repo: Mock) -> None:
+async def test_should_successfull_change_transfer_type(mock_repo: Mock) -> None:
     program = Program(
         program_id=1,
-        type_transport="Автобус",
+        transfer_type="Автобус",
         cost=100,
-        distance=200,
-        from_venue=None,
-        to_venue=None,
+        transfer_duration_minutes=200,
+        start_venue=None,
+        end_venue=None,
     )
-    mock_repo.change_transport.return_value = program
+    mock_repo.change_transfer_type.return_value = program
     service = ProgramService(mock_repo)
 
-    result = await service.change_transport(1, "Автобус")
+    result = await service.change_transfer_type(1, "Автобус")
 
     assert result == program
-    mock_repo.change_transport.assert_awaited_once_with(1, "Автобус")
+    mock_repo.change_transfer_type.assert_awaited_once_with(1, "Автобус")
 
 
 @pytest.mark.asyncio
-async def test_service_should_throw_exception_at_change_transport(
+async def test_service_should_throw_exception_at_change_transfer_type(
     mock_repo: Mock,
 ) -> None:
-    mock_repo.change_transport.side_effect = Exception("Error")
+    mock_repo.change_transfer_type.side_effect = Exception("Error")
     service = ProgramService(mock_repo)
 
     with pytest.raises(
         ValueError, match=re.escape("Не получилось изменить транспорт.")
     ):
-        await service.change_transport(1, "Поезд")
+        await service.change_transfer_type(1, "Поезд")
 
 
 @pytest.mark.asyncio
 async def test_should_successfull_get_by_venues(mock_repo: Mock) -> None:
     program = Program(
         program_id=1,
-        type_transport="Самолет",
+        transfer_type="Самолет",
         cost=300,
-        distance=500,
-        from_venue=None,
-        to_venue=None,
+        transfer_duration_minutes=500,
+        start_venue=None,
+        end_venue=None,
     )
     mock_repo.get_by_venues.return_value = program
     service = ProgramService(mock_repo)
@@ -242,3 +242,4 @@ async def test_should_failed_get_list(mock_repo: Mock) -> None:
 
     assert result == []
     mock_repo.get_list.assert_awaited_once()
+
