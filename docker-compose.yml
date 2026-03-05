@@ -15,6 +15,10 @@ services:
       DB_NAME: mydb
       DATABASE_URL: "postgresql://egor:egor@db:5432/mydb"
       OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector:4317"
+      EXTERNAL_SERVICE_MODE: "${EXTERNAL_SERVICE_MODE:-real}"
+      EXTERNAL_SERVICE_REAL_BASE_URL: "${EXTERNAL_SERVICE_REAL_BASE_URL:-https://jsonplaceholder.typicode.com}"
+      EXTERNAL_SERVICE_MOCK_BASE_URL: "${EXTERNAL_SERVICE_MOCK_BASE_URL:-http://external-mock:8090}"
+      EXTERNAL_SERVICE_TIMEOUT_SEC: "${EXTERNAL_SERVICE_TIMEOUT_SEC:-5}"
       # MONGO_URI: "mongodb://admin:password@mongodb:27017"
     # volumes:
     #   - .:/app
@@ -33,6 +37,25 @@ services:
       - my_network
       - monitoring
       
+  external-mock:
+    build:
+      context: .
+      dockerfile: mock_server/Dockerfile
+    container_name: external_mock
+    ports:
+      - "8090:8090"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8090/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    networks:
+      - my_network
+    profiles:
+      - external-mock
+      - test
+
   test-db:
     image: postgres:15
     container_name: test-db

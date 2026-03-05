@@ -20,6 +20,27 @@ class Settings:
         self.SECRET_KEY: str = app["SECRET_KEY"]
         self.ALGORITHM: str = app.get("ALGORITHM", "HS256")
         self.SESSION_TIMEOUT: int = int(app.get("SESSION_TIMEOUT", 30))
+        self.EXTERNAL_SERVICE_MODE: str = os.environ.get(
+            "EXTERNAL_SERVICE_MODE",
+            app.get("EXTERNAL_SERVICE_MODE", "real"),
+        )
+        self.EXTERNAL_SERVICE_REAL_BASE_URL: str = os.environ.get(
+            "EXTERNAL_SERVICE_REAL_BASE_URL",
+            app.get(
+                "EXTERNAL_SERVICE_REAL_BASE_URL",
+                "https://jsonplaceholder.typicode.com",
+            ),
+        )
+        self.EXTERNAL_SERVICE_MOCK_BASE_URL: str = os.environ.get(
+            "EXTERNAL_SERVICE_MOCK_BASE_URL",
+            app.get("EXTERNAL_SERVICE_MOCK_BASE_URL", "http://localhost:8090"),
+        )
+        self.EXTERNAL_SERVICE_TIMEOUT_SEC: float = float(
+            os.environ.get(
+                "EXTERNAL_SERVICE_TIMEOUT_SEC",
+                app.get("EXTERNAL_SERVICE_TIMEOUT_SEC", "5"),
+            )
+        )
 
     def get_secret_key(self) -> str:
         return self.SECRET_KEY

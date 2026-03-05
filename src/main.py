@@ -20,6 +20,7 @@ from routers.program import program_router
 from routers.session import session_router
 from routers.user import user_router
 from routers.venue import venue_router
+from routers.external_service import external_service_router
 from tracing import setup_tracing
 
 
@@ -46,6 +47,7 @@ routers = [
     lodging_router,
     event_router,
     activity_router,
+    external_service_router,
 ]
 
 for r in routers:

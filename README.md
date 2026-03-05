@@ -1,4 +1,4 @@
-﻿# EventManager
+# EventManager
 
 Приложение для планирования участия в мероприятиях: пользователь выбирает площадки, формирует программу перемещения, добавляет размещение и активности, после чего работает с итоговой сессией и событием.
 
@@ -172,3 +172,37 @@ docker compose --profile benchmark run --rm benchmark
 - `/recommended` → `/programs/recommended`
 
 
+
+## ЛР7: Внешний сервис (mock/real)
+
+В проект добавлен интеграционный сценарий с внешним сервисом по контракту `GET /todos/{id}`.
+
+Приложение проксирует данные через endpoint:
+
+- `GET /api/external/todos/{todo_id}`
+
+### Переключение режима через конфиг
+
+Используются переменные окружения:
+
+- `EXTERNAL_SERVICE_MODE=mock|real`
+- `EXTERNAL_SERVICE_REAL_BASE_URL` (по умолчанию `https://jsonplaceholder.typicode.com`)
+- `EXTERNAL_SERVICE_MOCK_BASE_URL` (по умолчанию `http://external-mock:8090`)
+- `EXTERNAL_SERVICE_TIMEOUT_SEC` (по умолчанию `5`)
+
+### Demo с mock-сервером
+
+```bash
+EXTERNAL_SERVICE_MODE=mock docker compose --profile external-mock up -d db app external-mock
+curl http://localhost:8000/api/external/todos/1
+```
+
+### Demo с реальным сервисом
+
+```bash
+EXTERNAL_SERVICE_MODE=real docker compose up -d db app
+curl http://localhost:8000/api/external/todos/1
+```
+
+Для E2E добавлен сценарий: `tests/e2e/test_external_service_lab7_e2e.py`.
+Контракт внешнего сервиса: `docs/external_service_contract.md`.
