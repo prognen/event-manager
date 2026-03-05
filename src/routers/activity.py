@@ -7,7 +7,6 @@ from typing import Any
 
 from fastapi import APIRouter
 from fastapi import Depends
-from fastapi import HTTPException
 from fastapi import Request
 from fastapi.responses import HTMLResponse
 from fastapi.responses import RedirectResponse
@@ -56,20 +55,9 @@ async def get_all_activities(
 async def get_activity(
     activity_id: int, service_locator: ServiceLocator = get_sl_dep
 ) -> dict[str, Any]:
-    try:
-        result = await service_locator.get_activity_contr().get_activity_details(
-            activity_id
-        )
-        if result is None:
-            logger.warning("Активность с ID %d не найдена", activity_id)
-            raise HTTPException(status_code=404, detail="Activity not found")
-        logger.info("Информация об активности получена: %s", result)
-        return result
-    except Exception as e:
-        logger.error(
-            "Ошибка при получении информации об активности: %s", str(e), exc_info=True
-        )
-        raise HTTPException(status_code=500, detail=str(e))
+    result = await service_locator.get_activity_contr().get_activity_details(activity_id)
+    logger.info("Информация об активности получена: %s", result)
+    return result
 
 
 @activity_router.put("/api/activities/{activity_id}")

@@ -7,7 +7,6 @@ from typing import Any
 
 from fastapi import APIRouter
 from fastapi import Depends
-from fastapi import HTTPException
 from fastapi import Request
 from fastapi.responses import HTMLResponse
 from fastapi.responses import RedirectResponse
@@ -58,20 +57,9 @@ async def get_all_lodgings(
 async def get_lodging(
     lodging_id: int, service_locator: ServiceLocator = get_sl_dep
 ) -> dict[str, Any]:
-    try:
-        lodging = await service_locator.get_lodging_contr().get_lodging_details(
-            lodging_id
-        )
-        if lodging is None:
-            logger.warning("Размещение с ID %d не найдено", lodging_id)
-            raise HTTPException(status_code=404, detail="Lodging not found")
-        logger.info("Информация о размещении ID %d получена", lodging_id)
-        return lodging
-    except Exception as e:
-        logger.error(
-            "Ошибка при получении информации о размещении: %s", str(e), exc_info=True
-        )
-        raise HTTPException(status_code=500, detail=str(e))
+    result = await service_locator.get_lodging_contr().get_lodging_details(lodging_id)
+    logger.info("Информация о размещении ID %d получена", lodging_id)
+    return result
 
 
 @lodging_router.put(

@@ -48,9 +48,6 @@ async def get_venue(
     request: Request, service_locator: ServiceLocator = get_sl_dep
 ) -> dict[str, Any]:
     result = await service_locator.get_venue_contr().get_venue_details(request)
-    if result is None:
-        logger.warning("Площадка не найдена")
-        return {"error": "Venue not found"}
     logger.info("Информация о площадке получена: %s", result)
     return result
 
