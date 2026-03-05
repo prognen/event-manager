@@ -34,6 +34,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          poetry lock --no-interaction
           poetry install --with dev
           poetry run pip install flake8 mypy radon
           poetry run pip install opentelemetry-api opentelemetry-sdk \
@@ -94,6 +95,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          poetry lock --no-interaction
           poetry install --with dev
           poetry run pip install allure-pytest
           poetry run pip install opentelemetry-api opentelemetry-sdk \
@@ -171,6 +173,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          poetry lock --no-interaction
           poetry install --with dev
           poetry run pip install allure-pytest
           poetry run pip install opentelemetry-api opentelemetry-sdk \
@@ -274,6 +277,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          poetry lock --no-interaction
           poetry install --with dev --with e2e
           poetry run pip install allure-pytest pytest-bdd requests
           poetry run pip install opentelemetry-api opentelemetry-sdk \
@@ -418,6 +422,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          poetry lock --no-interaction
           poetry install --with dev
           poetry run pip install httpx
 
