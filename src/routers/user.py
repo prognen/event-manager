@@ -354,5 +354,3 @@ async def change_password(
     )
 
     return {"message": "Password changed successfully"}
-
-
