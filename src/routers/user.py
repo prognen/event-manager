@@ -108,8 +108,6 @@ async def login1_user(
     password = data.get("password")
 
     auth_serv = service_locator.get_auth_serv()
-    if auth_serv.is_blocked(login):
-        raise HTTPException(status_code=403, detail="User temporarily blocked")
 
     user = await service_locator.get_user_repo().get_by_login(login)
     if not user:
@@ -122,9 +120,6 @@ async def login1_user(
         )
     valid = await auth_serv.authenticate(login, password)
     if not valid:
-        # Если именно этот запрос довёл до лимита, сразу возвращаем блокировку (403).
-        if auth_serv.is_blocked(login):
-            raise HTTPException(status_code=403, detail="User temporarily blocked")
         raise HTTPException(status_code=401, detail="Invalid login or password")
 
     code = await auth_serv.generate_2fa_code(login)
