@@ -65,4 +65,3 @@ class Program(BaseModel):
         if value is not None and not isinstance(value, Venue):
             raise ValueError("end_venue должен быть экземпляром Venue")
         return value
-

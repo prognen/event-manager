@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import logging
 
@@ -413,6 +413,7 @@ async def get_recommended_programs(
             "catalog_title": "Рекомендованные программы",
         },
     )
+
 
 @session_router.post("/sessions/{session_id}/join")
 async def join_session(

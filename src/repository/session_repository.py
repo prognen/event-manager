@@ -392,4 +392,3 @@ class SessionRepository(ISessionRepository):
         except SQLAlchemyError as e:
             logger.error("Ошибка при получении частей сессии для event_id=%d: %s", event_id, str(e), exc_info=True)
             raise
-

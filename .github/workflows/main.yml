@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: write
+
+
 jobs:
   static-analysis:
     runs-on: ubuntu-latest
@@ -20,8 +24,9 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13"  
-          
+          python-version: "3.13"
+          cache: "poetry"
+          cache-dependency-path: poetry.lock
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
@@ -82,7 +87,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-
+          cache: "poetry"
+          cache-dependency-path: poetry.lock
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
@@ -160,7 +166,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-
+          cache: "poetry"
+          cache-dependency-path: poetry.lock
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
@@ -264,7 +271,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-
+          cache: "poetry"
+          cache-dependency-path: poetry.lock
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
@@ -399,7 +407,7 @@ jobs:
   benchmark-tests:
     runs-on: ubuntu-latest
     needs: [unit-tests, integration-tests, e2e-tests]
-    if: always()
+    if: ${{ needs.unit-tests.result == 'success' && needs.integration-tests.result == 'success' && needs.e2e-tests.result == 'success' }}
 
     steps:
       - name: Checkout code
@@ -409,7 +417,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-
+          cache: "poetry"
+          cache-dependency-path: poetry.lock
       - name: Install Poetry
         run: |
           curl -sSL https://install.python-poetry.org | python3 -
@@ -495,16 +504,12 @@ jobs:
           # Копируем новые JSON файлы результатов (unit/integration/e2e)
           find downloaded-artifacts -name "*.json" -exec cp {} merged-allure-results/ \;
 
-          # Копируем benchmark TXT файлы в формат Allure
-          if [ -d "downloaded-artifacts/benchmark" ]; then
-            echo "Copying benchmark TXT files..."
-            for f in downloaded-artifacts/benchmark/*.txt; do
-              # Меняем расширение на .json, чтобы Allure смог обработать (или просто копируем как есть)
-              cp "$f" merged-allure-results/
-            done
-            echo "Benchmark files copied: $(ls merged-allure-results/*.txt | wc -l)"
+          # Копируем benchmark-артефакты (если есть)
+          if [ -d "downloaded-artifacts/benchmark-results" ]; then
+            echo "Benchmark artifacts found"
+            find downloaded-artifacts/benchmark-results -maxdepth 2 -type f | head -n 20 || true
           else
-            echo "No benchmark files found"
+            echo "No benchmark artifacts found"
           fi
 
           echo "Total files in merged-allure-results: $(ls merged-allure-results | wc -l)"
@@ -537,11 +542,12 @@ jobs:
           echo "GitHub Pages configuration added"
 
       - name: Deploy to GitHub Pages with history
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: allure-report
-          keep_files: true
+          keep_files: false
 
 
   # test-metrics:
