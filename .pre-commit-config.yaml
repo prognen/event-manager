@@ -14,8 +14,10 @@ repos:
     rev: v1.11.2
     hooks:
       - id: mypy
+        name: Mypy (type + unreachable code)
         language: system
         files: ^src/
+        args: ["--warn-unreachable", "--disable-error-code=unused-ignore"]
 
   - repo: local
     hooks:

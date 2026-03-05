@@ -51,6 +51,11 @@ jobs:
           echo "Running Mypy..."
           poetry run mypy src --disable-error-code=unused-ignore
 
+      - name: Run Mypy (unreachable code check)
+        run: |
+          echo "Checking unreachable code..."
+          poetry run mypy src --warn-unreachable --disable-error-code=unused-ignore
+
       - name: Run Radon (Cyclomatic + Halstead)
         run: |
           echo "Cyclomatic Complexity check:"
