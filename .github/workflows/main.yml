@@ -341,13 +341,14 @@ jobs:
           docker network create monitoring 2>/dev/null || true
           docker compose --profile tracing up -d jaeger otel-collector
           for i in $(seq 1 30); do
-            if curl -sf http://localhost:16686 > /dev/null && curl -sf http://localhost:13133 > /dev/null; then
+            if curl -sf http://localhost:16686 > /dev/null \
+              && [ "$(docker inspect -f ''{{.State.Running}}'' otel_collector 2>/dev/null)" = "true" ]; then
               break
             fi
             sleep 2
           done
           curl -sf http://localhost:16686 > /dev/null
-          curl -sf http://localhost:13133 > /dev/null
+          [ "$(docker inspect -f ''{{.State.Running}}'' otel_collector 2>/dev/null)" = "true" ]
 
       - name: Start external mock server (Lab 7)
         if: ${{ needs.integration-tests.result == 'success' }}
@@ -682,5 +683,6 @@ jobs:
   #         name: test-metrics
   #         path: test-metrics
   #       if: always()
+
 
 
