@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import logging
 import time
@@ -122,6 +122,9 @@ async def login1_user(
         )
     valid = await auth_serv.authenticate(login, password)
     if not valid:
+        # Если именно этот запрос довёл до лимита, сразу возвращаем блокировку (403).
+        if auth_serv.is_blocked(login):
+            raise HTTPException(status_code=403, detail="User temporarily blocked")
         raise HTTPException(status_code=401, detail="Invalid login or password")
 
     code = await auth_serv.generate_2fa_code(login)
@@ -351,3 +354,5 @@ async def change_password(
     )
 
     return {"message": "Password changed successfully"}
+
+
